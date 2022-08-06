@@ -32,7 +32,7 @@ func TestProxyManager(t *testing.T){
 			Proxy: i2pProxy,
 		},
 	}
-	manager := NewPoxyManager(nil, mapping)
+	manager := NewProxyManager(nil, mapping)
 	if manager.Get(*exampleUri) != nil {
 		t.Errorf("Uri '%s' -> proxy '%s'", exampleUri, manager.Get(*exampleUri))
 	}

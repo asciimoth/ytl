@@ -31,11 +31,11 @@ func materialise(key ed25519.PrivateKey) ed25519.PrivateKey {
 type YggConn struct{
 	innerConn net.Conn
 	transport_key ed25519.PublicKey
-	allowList static.AllowList
+	allowList *static.AllowList
 	secureTranport bool
 }
 
-func connToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow static.AllowList, secureTranport bool) *YggConn {
+func connToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow *static.AllowList, secureTranport bool) *YggConn {
 	if conn == nil {return nil}
 	return &YggConn{conn, transport_key, allow, secureTranport}
 }
@@ -59,43 +59,43 @@ func (y * YggConn) Read(b []byte) (n int, err error) {
 type ConnManager struct{
 	transports map[string]static.Transport
 	key ed25519.PrivateKey
-	proxyManager PoxyManager
-	allowList static.AllowList
+	proxyManager ProxyManager
+	allowList *static.AllowList
 	ctx context.Context
 }
 
-func NewConnManager(ctx context.Context, key ed25519.PrivateKey, proxy *PoxyManager, allowList static.AllowList) *ConnManager{
+func NewConnManager(ctx context.Context, key ed25519.PrivateKey, proxy *ProxyManager, allowList *static.AllowList) *ConnManager{
 	transports_list := make(map[string]static.Transport)
 	for _, transport := range transports.TransportsList{
 		transports_list[transport.GetScheme()] = transport
 	}
 	if proxy == nil {
-		p := NewPoxyManager(nil, nil)
+		p := NewProxyManager(nil, nil)
 		proxy = &p
 	}
 	return &ConnManager{transports_list, key, *proxy, allowList, ctx}
 }
 
 func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn, error) {
-	var allowList static.AllowList = nil
+	var allowList *static.AllowList = nil
 	if c.allowList != nil {
-		allow := make(static.AllowList, len(c.allowList))
-		copy(allow, c.allowList)
-		allowList = allow
+		allow := make(static.AllowList, len(*c.allowList))
+		copy(allow, *c.allowList)
+		allowList = &allow
 	}
 	if pubkeys, ok := uri.Query()["key"]; ok && len(pubkeys) > 0 {
 		var allow static.AllowList
 		if allowList == nil {
 			allow = make(static.AllowList, 0)
 		}else{
-			allow = allowList
+			allow = *allowList
 		}
 		for _, pubkey := range pubkeys {
 			if key, err := hex.DecodeString(pubkey); err == nil {
 				allow = append(allow, key)
 			}
 		}
-		allowList = allow
+		allowList = &allow
 	}
 	if transport, ok := c.transports[uri.Scheme]; ok {
 		conn, transport_key, err := transport.Connect(ctx, uri, c.proxyManager.Get(uri), materialise(c.key))

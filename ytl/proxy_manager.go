@@ -18,19 +18,19 @@ type ProxyMapping struct {
 	Proxy *url.URL
 }
 
-type PoxyManager struct {
+type ProxyManager struct {
 	defaultProxy *url.URL
 	mapping []ProxyMapping
 }
 
-func NewPoxyManager(defaultProxy *url.URL, mapping []ProxyMapping) PoxyManager{
+func NewProxyManager(defaultProxy *url.URL, mapping []ProxyMapping) ProxyManager{
 	if mapping == nil {
 		mapping = make([]ProxyMapping, 0)
 	}
-	return PoxyManager{defaultProxy, mapping}
+	return ProxyManager{defaultProxy, mapping}
 }
 
-func (p * PoxyManager) Get(uri url.URL) *url.URL {
+func (p * ProxyManager) Get(uri url.URL) *url.URL {
 	for _, mapping := range p.mapping {
 		if mapping.HostRegexp.MatchString(uri.Host) {
 			return mapping.Proxy
