@@ -9,15 +9,12 @@
 package ytl
 
 import (
+	"encoding/hex"
 	"crypto/ed25519"
 )
 
-func randomConnId() uint64 {
-	return 0 // TODO Randomise
-}
-
 func ketToStr(key ed25519.PublicKey) string {
-	return "" // TODO Convert to hex or base64
+	return hex.EncodeToString(key)
 }
 
 type connInfo struct {
@@ -29,12 +26,13 @@ type connInfo struct {
 type DeduplicationManager struct {
 	lockChan chan struct{}
 	connections map[string]connInfo
+	connId uint64
 }
 
 func NewDeduplicationManager() *DeduplicationManager {
 	lock := make(chan struct{}, 1)
 	lock <- struct{}{}
-	return &DeduplicationManager{lock, make(map[string]connInfo)}
+	return &DeduplicationManager{lock, make(map[string]connInfo), 0}
 }
 
 func (d *DeduplicationManager) lock() {
@@ -50,8 +48,9 @@ func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 	defer d.unlock()
 	if value, ok := d.connections[strKey]; ok {
 		if value.connId == connId {
-			value.closeMethod()
+			closeMethod := value.closeMethod
 			delete(d.connections, strKey);
+			closeMethod()
 		}
 	}
 }
@@ -63,7 +62,8 @@ func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure bool, close
 	if value, ok := d.connections[strKey]; ok {
 		if isSecure && !value.isSecure {
 			value.closeMethod()
-			connId := randomConnId()
+			connId := d.connId
+			d.connId += 1
 			d.connections[strKey] = connInfo{
 				closeMethod,
 				isSecure,
