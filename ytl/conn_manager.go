@@ -33,11 +33,16 @@ type YggConn struct{
 	transport_key ed25519.PublicKey
 	allowList *static.AllowList
 	secureTranport bool
+	ctx context.Context
 }
 
-func connToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow *static.AllowList, secureTranport bool) *YggConn {
+func connToYggConn(ctx context.Context, conn net.Conn, transport_key ed25519.PublicKey, allow *static.AllowList, secureTranport bool) *YggConn {
 	if conn == nil {return nil}
-	return &YggConn{conn, transport_key, allow, secureTranport}
+	return &YggConn{conn, transport_key, allow, secureTranport, ctx}
+}
+
+func (y * YggConn) Close() error {
+	return y.innerConn.Close()
 }
 
 func (y * YggConn) Read(b []byte) (n int, err error) {
@@ -45,7 +50,6 @@ func (y * YggConn) Read(b []byte) (n int, err error) {
 }
 
 //Write(b []byte) (n int, err error)
-//Close() error
 //LocalAddr() Addr
 //RemoteAddr() Addr
 //SetDeadline(t time.Time) error
@@ -107,7 +111,7 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 					}
 			}
 		}
-		return connToYggConn(conn, transport_key, allowList, transport.IsSecure()), err
+		return connToYggConn(c.ctx, conn, transport_key, allowList, transport.IsSecure()), err
 	}
 	return nil, static.UnknownSchemeError{Scheme: uri.Scheme}
 }
@@ -133,9 +137,6 @@ func (c * ConnManager) ConnectCtxStr(ctx context.Context, uri string) (*YggConn,
 }
 
 func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggConn, error) {
-	if timeout > static.MAX_TIMEOUT {
-		timeout = static.MAX_TIMEOUT
-	}
 	type Result struct{
 		Conn *YggConn
 		Error error
@@ -152,7 +153,7 @@ func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggC
     		go func() {
     			result := <-result
     			if result.Error == nil && result.Conn != nil{
-    				result.Conn.innerConn.Close()
+    				result.Conn.Close()
     			}
     		}()
         	return nil, static.ConnTimeoutError{}
