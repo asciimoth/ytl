@@ -73,6 +73,16 @@ func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure bool, close
 				d.onClose(strKey, connId)
 			}
 		}
+		return nil
 	}
-	return nil
+	connId := d.connId
+	d.connId += 1
+	d.connections[strKey] = connInfo{
+		closeMethod,
+		isSecure,
+		connId,
+	}
+	return func(){
+		d.onClose(strKey, connId)
+	}
 }
