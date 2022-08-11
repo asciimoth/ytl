@@ -27,12 +27,13 @@ type DeduplicationManager struct {
 	lockChan chan struct{}
 	connections map[string]connInfo
 	connId uint64
+	secureMode bool
 }
 
-func NewDeduplicationManager() *DeduplicationManager {
+func NewDeduplicationManager(secureMode bool) *DeduplicationManager {
 	lock := make(chan struct{}, 1)
 	lock <- struct{}{}
-	return &DeduplicationManager{lock, make(map[string]connInfo), 0}
+	return &DeduplicationManager{lock, make(map[string]connInfo), 0, secureMode}
 }
 
 func (d *DeduplicationManager) lock() {
@@ -50,7 +51,9 @@ func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 		if value.connId == connId {
 			closeMethod := value.closeMethod
 			delete(d.connections, strKey);
-			closeMethod()
+			if closeMethod != nil {
+				closeMethod()
+			}
 		}
 	}
 }
@@ -60,8 +63,12 @@ func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure bool, close
 	defer d.unlock()
 	strKey := ketToStr(key)
 	if value, ok := d.connections[strKey]; ok {
+		if !d.secureMode { return nil }
 		if isSecure && !value.isSecure {
-			value.closeMethod()
+			if value.closeMethod != nil {
+				value.closeMethod()
+				value.closeMethod = nil
+			}
 			connId := d.connId
 			d.connId += 1
 			d.connections[strKey] = connInfo{
