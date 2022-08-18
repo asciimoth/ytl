@@ -29,10 +29,13 @@ type YggConn struct{
 	closefn func()
 	pVersion chan *static.ProtoVersion
 	otherPublicKey chan ed25519.PublicKey
+	isClosed chan bool
 }
 
 func ConnToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow *static.AllowList, secureTranport bool, dm *DeduplicationManager) *YggConn {
 	if conn == nil {return nil}
+	isClosed := make(chan bool, 1)
+	isClosed <- false
 	ret := YggConn{
 		conn,
 		transport_key,
@@ -44,13 +47,14 @@ func ConnToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow *static
 		func(){},
 		make(chan *static.ProtoVersion, 1),
 		make(chan ed25519.PublicKey, 1),
+		isClosed,
 	}
 	go ret.middleware()
 	return &ret
 }
 
 func (y * YggConn) setErr(err error) {
-	if y.err != nil {
+	if y.err == nil {
 		y.err = err
 	}
 	y.Close()
@@ -109,14 +113,17 @@ func (y * YggConn) middleware() {
 	// Deduplication
 	if y.dm != nil {
 		closefunc := y.dm.Check(key, y.secureTranport, func(){
-			y.setErr(static.ConnClosedByDeduplicatorError{})
+			e := static.ConnClosedByDeduplicatorError{}
+			y.setErr(e)
 		})
 		if closefunc == nil {
-			onerror(static.ConnClosedByDeduplicatorError{})
+			e := static.ConnClosedByDeduplicatorError{}
+			onerror(e)
 			return
 		}
 		y.closefn = closefunc
 	}
+	
 	y.extraReadBuffChn <- buf
 }
 
@@ -135,7 +142,13 @@ func (y * YggConn) GetPublicKey() (ed25519.PublicKey, error) {
 }
 
 func (y * YggConn) Close() (err error) {
-	y.closefn()
+	closed := <- y.isClosed
+	defer func(){y.isClosed <- closed}()
+	closed = true
+	if y.closefn != nil && !closed{
+		y.closefn()
+		y.closefn = func(){}
+	}
 	err = y.innerConn.Close()
 	if y.err != nil { err = y.err }
 	return err
