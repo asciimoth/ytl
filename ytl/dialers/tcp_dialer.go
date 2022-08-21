@@ -18,7 +18,7 @@ import (
 )
 
 type TcpDialer struct {
-	Timeout time.Duration `default:"static.MAX_TIMEOUT"`
+	Timeout time.Duration `default:"2m"`
 	KeepAlive time.Duration `default:"15s"`
 	Control func(network, address string, c syscall.RawConn) error
 }
