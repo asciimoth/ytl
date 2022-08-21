@@ -9,7 +9,6 @@
 package ytl
 
 import (
-	//"bytes"
 	"testing"
 	"crypto/ed25519"
 )

@@ -100,6 +100,7 @@ func (y * YggConn) middleware() {
 	key := make(ed25519.PublicKey, ed25519.PublicKeySize)
 	copy(key, key_raw)
 	y.otherPublicKey <- key
+	// TODO check is key is in AllowList
 	if y.transport_key != nil {
 		if bytes.Compare(y.transport_key, key) != 0 {
 			// Invalid transport key

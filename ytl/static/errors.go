@@ -10,7 +10,10 @@ package static
 
 import (
 	"fmt"
-	"net/url")
+	"net/url"
+	"encoding/hex"
+	"crypto/ed25519"
+)
 
 type UnknownSchemeError struct {
 	Scheme string
@@ -55,4 +58,42 @@ func (e InapplicableProxyTypeError) Error() string {
 	u := url.URL(e.Proxy)
 	url := &u
 	return fmt.Sprintf("Proxy type '%s' cannot use with '%s' transport", url.String(), e.Transport)
+}
+
+type UnknownProtoError struct {}
+
+func (e UnknownProtoError) Error() string {
+	return fmt.Sprintf("Unknown protocol")
+}
+
+type UnknownProtoVersionError struct {
+	Expected ProtoVersion
+	Received ProtoVersion
+}
+
+func (e UnknownProtoVersionError) Error() string {
+	return fmt.Sprintf(
+		"Expected protocol version is %d.%d but received is %d.%d",
+		e.Expected.Major, e.Expected.Minor,
+		e.Received.Major, e.Received.Minor,
+	)
+}
+
+type TransportSecurityCheckError struct {
+	Expected ed25519.PublicKey
+	Received ed25519.PublicKey
+}
+
+func (e TransportSecurityCheckError) Error() string {
+	return fmt.Sprintf(
+		"Transport key is %s but node key is %s",
+		hex.EncodeToString(e.Expected),
+		hex.EncodeToString(e.Received),
+	)
+}
+
+type ConnClosedByDeduplicatorError struct {}
+
+func (e ConnClosedByDeduplicatorError) Error() string {
+	return fmt.Sprintf("Connection closed by deduplicator")
 }

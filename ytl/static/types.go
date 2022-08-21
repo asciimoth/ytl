@@ -16,6 +16,11 @@ import (
 	"crypto/ed25519"
 )
 
+type ProtoVersion struct {
+	Major uint8
+	Minor uint8
+}
+
 type AllowList []ed25519.PublicKey
 
 func (a *AllowList) IsAllow(key ed25519.PublicKey) bool {

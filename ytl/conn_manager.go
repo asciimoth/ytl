@@ -33,9 +33,10 @@ type ConnManager struct{
 	proxyManager ProxyManager
 	allowList *static.AllowList
 	ctx context.Context
+	dm *DeduplicationManager
 }
 
-func NewConnManager(ctx context.Context, key ed25519.PrivateKey, proxy *ProxyManager, allowList *static.AllowList) *ConnManager{
+func NewConnManager(ctx context.Context, key ed25519.PrivateKey, proxy *ProxyManager, dm *DeduplicationManager, allowList *static.AllowList) *ConnManager{
 	transports_list := make(map[string]static.Transport)
 	for _, transport := range transports.TransportsList{
 		transports_list[transport.GetScheme()] = transport
@@ -44,7 +45,7 @@ func NewConnManager(ctx context.Context, key ed25519.PrivateKey, proxy *ProxyMan
 		p := NewProxyManager(nil, nil)
 		proxy = &p
 	}
-	return &ConnManager{transports_list, key, *proxy, allowList, ctx}
+	return &ConnManager{transports_list, key, *proxy, allowList, ctx, dm}
 }
 
 func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn, error) {
@@ -78,7 +79,7 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 					}
 			}
 		}
-		return connToYggConn(c.ctx, conn, transport_key, allowList, transport.IsSecure()), err
+		return ConnToYggConn(conn, transport_key, allowList, transport.IsSecure(), c.dm), err
 	}
 	return nil, static.UnknownSchemeError{Scheme: uri.Scheme}
 }
