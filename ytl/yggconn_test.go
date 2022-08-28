@@ -8,17 +8,17 @@
 // work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 package ytl
 
-/*import (
+import (
 	"io"
 	"net"
 	"bytes"
 	"testing"
 	"github.com/DomesticMoth/ytl/ytl/static"
 	"github.com/DomesticMoth/ytl/ytl/debugstuff"
-)*/
+)
 
 
-/*func TestYggConnCorrectReading(t *testing.T){
+func TestYggConnCorrectReading(t *testing.T){
 	for i := 0; i < 2; i++ {
 		strictMode := false
 		if i > 0 { strictMode = true }
@@ -69,7 +69,7 @@ package ytl
 			}
 		}
 	}
-}*/
+}
 
 /*func yggConnTestCollision(
 		t *testing.T, 

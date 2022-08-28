@@ -14,7 +14,7 @@ import (
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
 
-func Test(t *testing.T){
+func TestMockPubKeyGeneration(t *testing.T){
 	key := MokePubKey()
 	correct := []byte{
 		194, 220, 146,  21, 237, 163, 168,  31,
@@ -23,7 +23,7 @@ func Test(t *testing.T){
 		143,  73, 142,  61,  27, 142, 160, 212,
 	}
 	if bytes.Compare(key, correct) != 0 {
-		t.Errorf("Wrong moke PubKey %s", static.TransportSecurityCheckError{
+		t.Errorf("Wrong mock PubKey %s", static.TransportSecurityCheckError{
 						Expected: correct,
 						Received: key,
 					})
