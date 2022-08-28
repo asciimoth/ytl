@@ -10,7 +10,6 @@ package ytl
 
 import (
 	"io"
-	"net"
 	"bytes"
 	"testing"
 	"github.com/DomesticMoth/ytl/ytl/static"
@@ -26,7 +25,7 @@ func TestYggConnCorrectReading(t *testing.T){
 			secure := false
 			if j > 0 { secure = true }
 			data := debugstuff.MokeConnContent()
-			a, b := net.Pipe()
+			a := debugstuff.MockConn()
 			dm := NewDeduplicationManager(strictMode)
 			yggcon := ConnToYggConn(
 				a,
@@ -36,10 +35,6 @@ func TestYggConnCorrectReading(t *testing.T){
 				dm,
 			)
 			defer yggcon.Close()
-			go func() {
-				b.Write(data)
-				b.Close()
-			}()
 			buf := make([]byte, len(data))
 			n, err := io.ReadFull(yggcon, buf)
 			if err != nil {
@@ -71,39 +66,30 @@ func TestYggConnCorrectReading(t *testing.T){
 	}
 }
 
-/*func yggConnTestCollision(
+func yggConnTestCollision(
 		t *testing.T, 
 		n1, n2 bool, // secure params for connections
 		n int, // The number of the connection to be CLOSED
 	) {
 	dm := NewDeduplicationManager(true)
-	data := MokeConnContent()
-	a, c := net.Pipe()
-	b, d := net.Pipe()
+	a := debugstuff.MockConn()
+	b := debugstuff.MockConn()
 	yggcon1 := ConnToYggConn(
 		a,
-		MokeKey(),
+		debugstuff.MokePubKey(),
 		nil,
 		n1,
 		dm,
 	)
 	yggcon2 := ConnToYggConn(
 		b,
-		MokeKey(),
+		debugstuff.MokePubKey(),
 		nil,
 		n2,
 		dm,
 	)
 	defer yggcon1.Close()
 	defer yggcon2.Close()
-	defer d.Close()
-	defer c.Close()
-	go func() {
-		c.Write(data)
-	}()
-	go func() {
-		d.Write(data)
-	}()
 	buf := make([]byte, 1)
 	var err1, err2 error
 	if n == 1 {
@@ -113,10 +99,8 @@ func TestYggConnCorrectReading(t *testing.T){
 		_, err1 = io.ReadFull(yggcon1, buf)
 		_, err2 = io.ReadFull(yggcon2, buf)
 	}
-	t.Errorf("e1 %s; e2 %s", err1, err2)
-	return
 	if err1 != nil {
-		t.Errorf("Wrong conn was closed %s", err1)
+		t.Errorf("Wrong conn was closed: %s", err1)
 		return
 	}
 	if err2 == nil {
@@ -127,7 +111,7 @@ func TestYggConnCorrectReading(t *testing.T){
 		case static.ConnClosedByDeduplicatorError:
 		    // Ok
 		default:
-		    t.Errorf("Connection was not closed by deduplicator %s", err2)
+		    t.Errorf("Connection was not closed by deduplicator: %s", err2)
 		    return
 	}
 }

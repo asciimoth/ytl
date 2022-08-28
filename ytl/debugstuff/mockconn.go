@@ -9,6 +9,7 @@
 package debugstuff
 
 import (
+	"net"
 	"crypto/ed25519"
 )
 
@@ -39,4 +40,18 @@ func MokeConnContent() []byte {
 		6, 7, 6, 7, 6, 7,
 		8, 9, 8, 9, 8, 9,
 	}
+}
+
+func MockConn() net.Conn {
+	a, b := net.Pipe()
+	go func(){
+		buf := make([]byte, 1)
+		b.Write(MokeConnContent())
+		for {
+			_, err := b.Read(buf)
+			if err != nil { break }
+		}
+		b.Close()
+	}()
+	return a
 }
