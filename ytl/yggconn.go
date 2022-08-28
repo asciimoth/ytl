@@ -247,6 +247,28 @@ func (y * YggConn) SetWriteDeadline(t time.Time) (err error) {
 	return
 }
 
-/*type YggListener struct {
+type YggListener struct {
 	inner_listener net.Listener
-}*/
+	secure bool
+	dm *DeduplicationManager
+}
+
+// Accept waits for and returns the next connection to the listener.
+func (y * YggListener) Accept() (ygg YggConn, err error) {
+	conn, err := y.inner_listener.Accept()
+	if err != nil { return }
+	yggr := ConnToYggConn(conn, nil, nil, y.secure, y.dm)
+	ygg = *yggr
+	return
+}
+
+// Close closes the listener.
+// Any blocked Accept operations will be unblocked and return errors.
+func (y * YggListener) Close() error {
+	return y.inner_listener.Close()
+}
+
+// Addr returns the listener's network address.
+func (y * YggListener) Addr() net.Addr {
+	return y.inner_listener.Addr()
+}
