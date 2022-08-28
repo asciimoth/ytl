@@ -72,7 +72,7 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 	if transport, ok := c.transports[uri.Scheme]; ok {
 		conn, transport_key, err := transport.Connect(ctx, uri, c.proxyManager.Get(uri), materialise(c.key))
 		if allowList != nil {
-			if allowList.IsAllow(transport_key) {
+			if !allowList.IsAllow(transport_key) {
 				conn.Close()
 					return nil, static.IvalidPeerPublicKey{
 						Text: "Key received from the peer is not in the allow list",
