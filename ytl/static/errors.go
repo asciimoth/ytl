@@ -31,6 +31,7 @@ func (e InvalidUriError) Error() string {
 	return fmt.Sprintf("Uri is invalid; %s", e.Err)
 }
 
+// TODO Strore key in ed25519.PublicKey type and convert it to string on fly in Error()
 type IvalidPeerPublicKey struct{
 	Text string
 }

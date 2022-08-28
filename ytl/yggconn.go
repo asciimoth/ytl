@@ -13,6 +13,7 @@ import (
 	"net"
 	"time"
 	"bytes"
+	"encoding/hex"
 	"crypto/ed25519"
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
@@ -149,7 +150,12 @@ func (y * YggConn) middleware() {
 			return
 		}
 	}
-	// TODO Check is pkey is in AllowList
+	if y.allowList != nil {
+		if !y.allowList.IsAllow(pkey) {
+			onerror(static.IvalidPeerPublicKey{hex.EncodeToString(pkey)})
+			return
+		}
+	}
 	if y.dm != nil {
 		closefunc := y.dm.Check(pkey, y.secureTranport, func(){
 			y.setErr(static.ConnClosedByDeduplicatorError{})
