@@ -125,7 +125,6 @@ func (y * YggConn) setErr(err error) {
 	y.Close()
 }
 
-// TODO Rewrite this function into something more human readable
 func (y * YggConn) middleware() {
 	onerror := func(e error) {
 		y.setErr(e)
