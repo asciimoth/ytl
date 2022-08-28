@@ -8,45 +8,29 @@
 // work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 package ytl
 
-import (
+/*import (
 	"io"
 	"net"
 	"bytes"
 	"testing"
-	"crypto/ed25519"
 	"github.com/DomesticMoth/ytl/ytl/static"
-)
+	"github.com/DomesticMoth/ytl/ytl/debugstuff"
+)*/
 
-func MokeKey() []byte {
-	buf := MokeConnContent()
-	return buf[len(buf)-ed25519.PublicKeySize:]
-}
 
-func MokeConnContent() []byte {
-	return []byte{
-		109, 101, 116, 97, // 'm' 'e' 't' 'a'
-		0, 4, // Version
-		// PublicKey
-		194, 220, 146,  21, 237, 163, 168,  31,
-		216,  91, 173,   6,  46, 225, 161, 231,
-		146, 238,  83, 130, 131,  95, 151, 141,
-		143,  73, 142,  61,  27, 142, 160, 212,
-	}
-}
-
-func TestYggConnCorrectReading(t *testing.T){
+/*func TestYggConnCorrectReading(t *testing.T){
 	for i := 0; i < 2; i++ {
 		strictMode := false
 		if i > 0 { strictMode = true }
 		for j := 0; j < 2; j++ {
 			secure := false
 			if j > 0 { secure = true }
-			data := MokeConnContent()
+			data := debugstuff.MokeConnContent()
 			a, b := net.Pipe()
 			dm := NewDeduplicationManager(strictMode)
 			yggcon := ConnToYggConn(
 				a,
-				MokeKey(),
+				debugstuff.MokePubKey(),
 				nil,
 				secure,
 				dm,
@@ -79,15 +63,15 @@ func TestYggConnCorrectReading(t *testing.T){
 			if err != nil {
 				t.Errorf("Error while reading public key %s", err)
 			}else{
-				if bytes.Compare(key, MokeKey()) != 0 {
+				if bytes.Compare(key, debugstuff.MokePubKey()) != 0 {
 					t.Errorf("Invalid key")
 				}
 			}
 		}
 	}
-}
+}*/
 
-func yggConnTestCollision(
+/*func yggConnTestCollision(
 		t *testing.T, 
 		n1, n2 bool, // secure params for connections
 		n int, // The number of the connection to be CLOSED
@@ -148,9 +132,9 @@ func yggConnTestCollision(
 	}
 }
 
-func TestYggConnCollisionII(t *testing.T){
+/*func TestYggConnCollisionII(t *testing.T){
 	yggConnTestCollision(t, false, false, 2)
-}
+}*/
 
 /*func TestYggConnTestCollisionIS(t *testing.T){
 	yggConnTestCollision(t, false, true, 1)
