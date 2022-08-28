@@ -13,7 +13,7 @@ import (
 	"crypto/ed25519"
 )
 
-func MokePubKey() []byte {
+func MockPubKey() []byte {
 	buf := MockConnContent()
 	metaPkgSize := 38
 	return buf[metaPkgSize-ed25519.PublicKeySize:metaPkgSize]

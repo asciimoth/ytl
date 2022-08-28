@@ -15,7 +15,7 @@ import (
 )
 
 func TestMockPubKeyGeneration(t *testing.T){
-	key := MokePubKey()
+	key := MockPubKey()
 	correct := []byte{
 		194, 220, 146,  21, 237, 163, 168,  31,
 		216,  91, 173,   6,  46, 225, 161, 231,

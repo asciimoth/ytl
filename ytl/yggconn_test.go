@@ -36,7 +36,7 @@ func TestParceMetaPackage(t *testing.T){
 			debugstuff.MockConn(),
 			nil,
 			&v,
-			debugstuff.MokePubKey(),
+			debugstuff.MockPubKey(),
 			debugstuff.MockConnContent()[:38],
 		},
 		CaseTestParceMetaPackage{
@@ -103,7 +103,7 @@ func TestYggConnCorrectReading(t *testing.T){
 			dm := NewDeduplicationManager(strictMode)
 			yggcon := ConnToYggConn(
 				a,
-				debugstuff.MokePubKey(),
+				debugstuff.MockPubKey(),
 				nil,
 				secure,
 				dm,
@@ -132,7 +132,7 @@ func TestYggConnCorrectReading(t *testing.T){
 			if err != nil {
 				t.Errorf("Error while reading public key %s", err)
 			}else{
-				if bytes.Compare(key, debugstuff.MokePubKey()) != 0 {
+				if bytes.Compare(key, debugstuff.MockPubKey()) != 0 {
 					t.Errorf("Invalid key")
 				}
 			}
@@ -150,14 +150,14 @@ func yggConnTestCollision(
 	b := debugstuff.MockConn()
 	yggcon1 := ConnToYggConn(
 		a,
-		debugstuff.MokePubKey(),
+		debugstuff.MockPubKey(),
 		nil,
 		n1,
 		dm,
 	)
 	yggcon2 := ConnToYggConn(
 		b,
-		debugstuff.MokePubKey(),
+		debugstuff.MockPubKey(),
 		nil,
 		n2,
 		dm,
