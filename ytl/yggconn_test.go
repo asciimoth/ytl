@@ -24,7 +24,7 @@ func TestYggConnCorrectReading(t *testing.T){
 		for j := 0; j < 2; j++ {
 			secure := false
 			if j > 0 { secure = true }
-			data := debugstuff.MokeConnContent()
+			data := debugstuff.MockConnContent()
 			a := debugstuff.MockConn()
 			dm := NewDeduplicationManager(strictMode)
 			yggcon := ConnToYggConn(

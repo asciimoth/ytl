@@ -14,12 +14,12 @@ import (
 )
 
 func MokePubKey() []byte {
-	buf := MokeConnContent()
+	buf := MockConnContent()
 	metaPkgSize := 38
 	return buf[metaPkgSize-ed25519.PublicKeySize:metaPkgSize]
 }
 
-func MokeConnContent() []byte {
+func MockConnContent() []byte {
 	return []byte{
 		109, 101, 116, 97, // 'm' 'e' 't' 'a'
 		0, 4, // Version
@@ -46,7 +46,7 @@ func MockConn() net.Conn {
 	a, b := net.Pipe()
 	go func(){
 		buf := make([]byte, 1)
-		b.Write(MokeConnContent())
+		b.Write(MockConnContent())
 		for {
 			_, err := b.Read(buf)
 			if err != nil { break }
