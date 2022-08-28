@@ -9,34 +9,23 @@
 package debugstuff
 
 import (
-	"crypto/ed25519"
+	"testing"
+	"bytes"
+	"github.com/DomesticMoth/ytl/ytl/static"
 )
 
-func MokePubKey() []byte {
-	buf := MokeConnContent()
-	metaPkgSize := 38
-	return buf[metaPkgSize-ed25519.PublicKeySize:metaPkgSize]
-}
-
-func MokeConnContent() []byte {
-	return []byte{
-		109, 101, 116, 97, // 'm' 'e' 't' 'a'
-		0, 4, // Version
-		// PublicKey
+func Test(t *testing.T){
+	key := MokePubKey()
+	correct := []byte{
 		194, 220, 146,  21, 237, 163, 168,  31,
 		216,  91, 173,   6,  46, 225, 161, 231,
 		146, 238,  83, 130, 131,  95, 151, 141,
 		143,  73, 142,  61,  27, 142, 160, 212,
-		// Some pseudo payload
-		0, 1, 0, 1, 0, 1,
-		2, 3, 2, 3, 2, 3,
-		4, 5, 4, 5, 4, 5,
-		6, 7, 6, 7, 6, 7,
-		8, 9, 8, 9, 8, 9,
-		0, 1, 0, 1, 0, 1,
-		2, 3, 2, 3, 2, 3,
-		4, 5, 4, 5, 4, 5,
-		6, 7, 6, 7, 6, 7,
-		8, 9, 8, 9, 8, 9,
+	}
+	if bytes.Compare(key, correct) != 0 {
+		t.Errorf("Wrong moke PubKey %s", static.TransportSecurityCheckError{
+						Expected: correct,
+						Received: key,
+					})
 	}
 }
