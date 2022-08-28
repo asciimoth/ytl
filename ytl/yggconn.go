@@ -13,7 +13,6 @@ import (
 	"net"
 	"time"
 	"bytes"
-	"encoding/hex"
 	"crypto/ed25519"
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
@@ -152,7 +151,10 @@ func (y * YggConn) middleware() {
 	}
 	if y.allowList != nil {
 		if !y.allowList.IsAllow(pkey) {
-			onerror(static.IvalidPeerPublicKey{hex.EncodeToString(pkey)})
+			// TODO Write more human readable error text
+			onerror(static.IvalidPeerPublicKey{
+				"Key received from the peer is not in the allow list",
+			})
 			return
 		}
 	}
