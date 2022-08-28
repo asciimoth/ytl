@@ -18,6 +18,71 @@ import (
 )
 
 
+func internalParceMetaPackage(conn net.Conn) (
+	err error,
+	version *static.ProtoVersion,
+	pkey ed25519.PublicKey,
+	buf []byte,
+) {
+	buf = make([]byte, len(static.META_HEADER())+2+ed25519.PublicKeySize)
+	_, err = io.ReadFull(conn, buf);
+	if err != nil { return }
+	if bytes.Compare(static.META_HEADER(), buf[:len(static.META_HEADER())]) != 0 {
+		// Unknown proto
+		err = static.UnknownProtoError{}
+		return
+	}
+	version = &static.ProtoVersion{
+		buf[len(static.META_HEADER())],
+		buf[len(static.META_HEADER())+1],
+	}
+	target_version := static.PROTO_VERSION()
+	if version.Major != target_version.Major || version.Minor != target_version.Minor {
+		// Unknown proto version
+		err = static.UnknownProtoVersionError{
+			Expected: static.PROTO_VERSION(),
+			Received: *version,
+		}
+		return
+	}
+	key_raw := buf[len(buf)-ed25519.PublicKeySize:]
+	pkey = make(ed25519.PublicKey, ed25519.PublicKeySize)
+	copy(pkey, key_raw)
+	return
+}
+
+func parceMetaPackage(conn net.Conn, timeout time.Duration) (
+	err error,
+	version *static.ProtoVersion,
+	pkey ed25519.PublicKey,
+	buf []byte,
+) {
+	type result struct {
+		err error
+		version *static.ProtoVersion
+		pkey ed25519.PublicKey
+		buf []byte
+	}
+	ret := make(chan result, 1)
+	go func(){
+		err, version, pkey, buf := internalParceMetaPackage(conn)
+		ret <- result{err, version, pkey, buf}
+	}()
+    select {
+    	case <-time.After(timeout):
+    		conn.Close()
+    		err = static.ConnTimeoutError{}
+        	return
+    	case ret := <-ret:
+			err = ret.err
+			version = ret.version
+			pkey = ret.pkey
+			buf = ret.buf
+        	return
+	}
+	return
+}
+
 type YggConn struct{
 	innerConn net.Conn
 	transport_key ed25519.PublicKey
@@ -66,65 +131,37 @@ func (y * YggConn) middleware() {
 		y.setErr(e)
 		y.extraReadBuffChn <- nil
 	}
-	// Read meta header
-	buf := make([]byte, len(static.META_HEADER())+2+ed25519.PublicKeySize)
-	_, err := io.ReadFull(y.innerConn, buf);
-	if err != nil {
+	err, version, pkey, buf := parceMetaPackage(y.innerConn, time.Minute)
+	y.pVersion <- version
+	y.otherPublicKey <- pkey
+	if len(buf) == 0 { buf = nil }
+	if err != nil  {
 		onerror(err)
 		return
 	}
-	if bytes.Compare(static.META_HEADER(), buf[:len(static.META_HEADER())]) != 0 {
-		// Unknown proto
-		onerror(static.UnknownProtoError{})
-		y.pVersion <- nil
-		y.otherPublicKey <- nil
-		return
-	}
-	// Return version to requesters
-	version := static.ProtoVersion{
-		buf[len(static.META_HEADER())],
-		buf[len(static.META_HEADER())+1],
-	}
-	y.pVersion <- &version
-	target_version := static.PROTO_VERSION()
-	if version.Major != target_version.Major || version.Minor != target_version.Minor {
-		// Unknown proto version
-		onerror(static.UnknownProtoVersionError{
-			Expected: static.PROTO_VERSION(),
-			Received: version,
-		})
-		y.otherPublicKey <- nil
-		return
-	}
-	key_raw := buf[len(buf)-ed25519.PublicKeySize:]
-	key := make(ed25519.PublicKey, ed25519.PublicKeySize)
-	copy(key, key_raw)
-	y.otherPublicKey <- key
-	// TODO check is key is in AllowList
+	// Check if node keq equal transport key
 	if y.transport_key != nil {
-		if bytes.Compare(y.transport_key, key) != 0 {
+		if bytes.Compare(y.transport_key, pkey) != 0 {
 			// Invalid transport key
 			onerror(static.TransportSecurityCheckError{
 				Expected: y.transport_key,
-				Received: key,
+				Received: pkey,
 			})
 			return
 		}
 	}
-	// Deduplication
+	// TODO Check is pkey is in AllowList
 	if y.dm != nil {
-		closefunc := y.dm.Check(key, y.secureTranport, func(){
-			e := static.ConnClosedByDeduplicatorError{}
-			y.setErr(e)
+		closefunc := y.dm.Check(pkey, y.secureTranport, func(){
+			y.setErr(static.ConnClosedByDeduplicatorError{})
 		})
 		if closefunc == nil {
-			e := static.ConnClosedByDeduplicatorError{}
-			onerror(e)
+			onerror(static.ConnClosedByDeduplicatorError{})
 			return
 		}
 		y.closefn = closefunc
 	}
-	
+	// 
 	y.extraReadBuffChn <- buf
 }
 

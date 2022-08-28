@@ -10,6 +10,7 @@ package static
 
 import (
 	"net"
+	"fmt"
 	"net/url"
 	"context"
 	"crypto/subtle"
@@ -19,6 +20,11 @@ import (
 type ProtoVersion struct {
 	Major uint8
 	Minor uint8
+}
+
+// Cursed hack to make struct printable
+func (e ProtoVersion) Error() string {
+	return fmt.Sprintf("Version{%d.%d}", e.Major, e.Minor)
 }
 
 type AllowList []ed25519.PublicKey

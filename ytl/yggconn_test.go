@@ -10,12 +10,86 @@ package ytl
 
 import (
 	"io"
+	"net"
 	"bytes"
+	"time"
 	"testing"
+	"encoding/hex"
+	"crypto/ed25519"
 	"github.com/DomesticMoth/ytl/ytl/static"
 	"github.com/DomesticMoth/ytl/ytl/debugstuff"
 )
 
+type CaseTestParceMetaPackage struct {
+	conn net.Conn
+	err error
+	version *static.ProtoVersion
+	pkey ed25519.PublicKey
+	buf []byte
+}
+
+func TestParceMetaPackage(t *testing.T){
+	v := static.PROTO_VERSION()
+	v2 := static.ProtoVersion{1,5}
+	cases := []CaseTestParceMetaPackage{
+		CaseTestParceMetaPackage{
+			debugstuff.MockConn(),
+			nil,
+			&v,
+			debugstuff.MokePubKey(),
+			debugstuff.MockConnContent()[:38],
+		},
+		CaseTestParceMetaPackage{
+			debugstuff.MockWrongVerConn(),
+			static.UnknownProtoVersionError{
+				Expected: static.PROTO_VERSION(),
+				Received: v2,
+			},
+			&v2,
+			nil,
+			debugstuff.MockConnWrongVerContent()[:38],
+		},
+		CaseTestParceMetaPackage{
+			debugstuff.MockTooShortConn(),
+			static.ConnTimeoutError{},
+			nil,
+			nil,
+			nil,
+		},
+	};
+	for _, cse := range cases {
+		err, version, pkey, buf := parceMetaPackage(cse.conn, time.Second*2)
+		if err != cse.err {
+			t.Errorf("Wrong err %s %s", err, cse.err);
+			return
+		}
+		if version != nil && cse.version != nil {
+			if version.Major != cse.version.Major || version.Minor != cse.version.Minor {
+				t.Errorf("Wrong verison %s %s", version, cse.version);
+				return
+			}
+		} else if version != cse.version {
+			t.Errorf("Wrong verison %s %s", version, cse.version);
+			return
+		}
+		if bytes.Compare(pkey, cse.pkey) != 0 {
+			t.Errorf(
+				"Wrong PublicKey %s %s", 
+				hex.EncodeToString(pkey),
+				hex.EncodeToString(cse.pkey),
+			);
+			return
+		}
+		if bytes.Compare(buf, cse.buf) != 0 {
+			t.Errorf(
+				"Wrong buf %s %s",
+				hex.EncodeToString(buf),
+				hex.EncodeToString(cse.buf),
+			);
+			return
+		}
+	}
+}
 
 func TestYggConnCorrectReading(t *testing.T){
 	for i := 0; i < 2; i++ {
