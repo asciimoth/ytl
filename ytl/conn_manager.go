@@ -137,6 +137,21 @@ func (c * ConnManager) ConnectTimeoutStr(uri string, timeout time.Duration) (*Yg
 	return c.ConnectTimeout(*u, timeout)
 }
 
-//func (c * ConnManager) Listen(uri string) (net.Listener, error) {
-//	
-//}
+func (c * ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
+	if transport, ok := c.transports[uri.Scheme]; ok {
+		listener, e := transport.Listen(c.ctx, uri, c.key)
+		err = e
+		if err != nil { return }
+		ygg = YggListener{listener, transport.IsSecure(), c.dm}
+		return
+	}
+	err = static.UnknownSchemeError{Scheme: uri.Scheme}
+	return
+}
+
+func (c * ConnManager) ListenStr(uri string) (ygg YggListener, err error) {
+	u, e := url.Parse(uri)
+	err = e
+	if err != nil { return }
+	return c.Listen(*u)
+}
