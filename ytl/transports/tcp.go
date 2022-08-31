@@ -13,6 +13,7 @@ import(
 	"net/url"
 	"context"
 	"crypto/ed25519"
+	"github.com/DomesticMoth/ytl/ytl/static"
 	"github.com/DomesticMoth/ytl/ytl/dialers"
 )
 
@@ -32,6 +33,7 @@ func (t TcpTransport) Connect(ctx context.Context, uri url.URL, proxy *url.URL, 
 	return conn, nil, err
 }
 
-func (t TcpTransport) Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (net.Listener, error) {
-	return net.Listen(TcpScheme, uri.Host)
+func (t TcpTransport) Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (static.TransportListener, error) {
+	l, e := net.Listen(TcpScheme, uri.Host)
+	return static.ListenerToTransportListener(l), e
 }
