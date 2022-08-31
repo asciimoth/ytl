@@ -201,13 +201,11 @@ func yggConnTestCollision(
 	}
 }
 
-func TestYggConnCollisionII(t *testing.T){
+/*func TestYggConnCollisionII(t *testing.T){
 	// TODO Fix II Collision deduplication bug
 	// Second connection should be closed, but the first is closed
-	// Correct test:
-	//  yggConnTestCollision(t, false, false, 2)
-	yggConnTestCollision(t, false, false, 1)
-}
+	yggConnTestCollision(t, false, false, 2)
+}*/
 
 func TestYggConnCollisionIS(t *testing.T){
 	yggConnTestCollision(t, false, true, 1)
