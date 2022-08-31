@@ -8,6 +8,13 @@
 // work.  If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 package static
 
+const (
+	SECURE_LVL_UNSECURE uint = 0
+	SECURE_LVL_ENCRYPTED = 1
+	SECURE_LVL_SIGNED = 2
+	SECURE_LVL_ENCRYPTED_AND_SIGNED = 3
+)
+
 // Because there are no constants structures in go
 func PROTO_VERSION() ProtoVersion {
 	return ProtoVersion{0,4}

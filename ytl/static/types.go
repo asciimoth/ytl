@@ -79,7 +79,7 @@ func ListenerToTransportListener(linstener net.Listener) TransportListener {
 
 type Transport interface {
 	GetScheme() string
-	IsSecure() bool
+	IsSecure() uint
 	Connect(ctx context.Context, uri url.URL, proxy *url.URL, key ed25519.PrivateKey) (net.Conn, ed25519.PublicKey, error)
 	Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (TransportListener, error)
 }

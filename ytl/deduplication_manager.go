@@ -19,7 +19,7 @@ func ketToStr(key ed25519.PublicKey) string {
 
 type connInfo struct {
 	closeMethod func()
-	isSecure bool
+	isSecure uint
 	connId uint64
 }
 
@@ -58,13 +58,13 @@ func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 	}
 }
 
-func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure bool, closeMethod func()) func(){
+func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure uint, closeMethod func()) func(){
 	d.lock()
 	defer d.unlock()
 	strKey := ketToStr(key)
 	if value, ok := d.connections[strKey]; ok {
 		if !d.secureMode { return nil }
-		if isSecure && !value.isSecure {
+		if isSecure > value.isSecure {
 			if value.closeMethod != nil {
 				value.closeMethod()
 				value.closeMethod = nil

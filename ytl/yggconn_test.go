@@ -95,9 +95,7 @@ func TestYggConnCorrectReading(t *testing.T){
 	for i := 0; i < 2; i++ {
 		strictMode := false
 		if i > 0 { strictMode = true }
-		for j := 0; j < 2; j++ {
-			secure := false
-			if j > 0 { secure = true }
+		for secure := 0; secure < 2; secure++ {
 			data := debugstuff.MockConnContent()
 			a := debugstuff.MockConn()
 			dm := NewDeduplicationManager(strictMode)
@@ -105,7 +103,7 @@ func TestYggConnCorrectReading(t *testing.T){
 				a,
 				debugstuff.MockPubKey(),
 				nil,
-				secure,
+				uint(secure),
 				dm,
 			)
 			defer yggcon.Close()
@@ -142,7 +140,7 @@ func TestYggConnCorrectReading(t *testing.T){
 
 func yggConnTestCollision(
 		t *testing.T, 
-		n1, n2 bool, // secure params for connections
+		n1, n2 uint, // secure params for connections
 		n int, // The number of the connection to be CLOSED
 	) {
 	dm := NewDeduplicationManager(true)
@@ -208,29 +206,29 @@ func yggConnTestCollision(
 }*/
 
 func TestYggConnCollisionIS(t *testing.T){
-	yggConnTestCollision(t, false, true, 1)
+	yggConnTestCollision(t, 0, 1, 1)
 }
 
 func TestYggConnCollisionSI(t *testing.T){
-	yggConnTestCollision(t, true, false, 2)
+	yggConnTestCollision(t, 1, 0, 2)
 }
 
 func TestYggConnCollisionSS(t *testing.T){
-	yggConnTestCollision(t, true, false, 2)
+	yggConnTestCollision(t, 1, 0, 2)
 }
 
 func TestYggConnNoCollisionII(t *testing.T){
-	yggConnTestCollision(t, false, false, 0)
+	yggConnTestCollision(t, 0, 0, 0)
 }
 
 func TestYggConnNoCollisionIS(t *testing.T){
-	yggConnTestCollision(t, false, true, 0)
+	yggConnTestCollision(t, 0, 1, 0)
 }
 
 func TestYggConnNoCollisionSI(t *testing.T){
-	yggConnTestCollision(t, true, false, 0)
+	yggConnTestCollision(t, 1, 0, 0)
 }
 
 func TestYggConnNoCollisionSS(t *testing.T){
-	yggConnTestCollision(t, true, false, 0)
+	yggConnTestCollision(t, 1, 0, 0)
 }

@@ -15,8 +15,8 @@ import (
 
 func testCollision(
 		t *testing.T, 
-		n1, n2 bool, // secure params for connections
-		n int, // The number of the connection to be CLOSED
+		n1, n2 uint, // secure params for connections
+		n uint, // The number of the connection to be CLOSED
 	) {
 	manager := NewDeduplicationManager(true)
 	closeChn := make(chan int, 10)
@@ -57,32 +57,28 @@ func testCollision(
 }
 
 func TestCollisionII(t *testing.T){
-	testCollision(t, false, false, 2)
+	testCollision(t, 0, 0, 2)
 }
 
 func TestCollisionIS(t *testing.T){
-	testCollision(t, false, true, 1)
+	testCollision(t, 0, 1, 1)
 }
 
 func TestCollisionSI(t *testing.T){
-	testCollision(t, true, false, 2)
+	testCollision(t, 1, 0, 2)
 }
 
 func TestCollisionSS(t *testing.T){
-	testCollision(t, true, false, 2)
+	testCollision(t, 1, 1, 2)
 }
 
 func TestNoCollision(t *testing.T){
 	manager := NewDeduplicationManager(true)
 	chn := make(chan ed25519.PublicKey, 1)
 	for i := 0; i < 10; i++ {
-		for j := 0; j < 2; j++ {
-			secure := false
-			if j > 0 {
-				secure = true
-			}
-			key := make(ed25519.PublicKey, i+(10*j))
-			cancel := manager.Check(key, secure, func(){ chn <- key })
+		for secure := 0; secure < 2; secure++ {
+			key := make(ed25519.PublicKey, i+(10*secure))
+			cancel := manager.Check(key, uint(secure), func(){ chn <- key })
 			if cancel == nil {
 				t.Errorf("Connection closed")
 				return

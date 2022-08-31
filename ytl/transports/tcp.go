@@ -25,7 +25,9 @@ func (t TcpTransport) GetScheme() string {
     return TcpScheme
 }
 
-func (t TcpTransport) IsSecure() bool { return false }
+func (t TcpTransport) IsSecure() uint {
+	return static.SECURE_LVL_UNSECURE
+}
 
 func (t TcpTransport) Connect(ctx context.Context, uri url.URL, proxy *url.URL, key ed25519.PrivateKey) (net.Conn, ed25519.PublicKey, error) {
 	dialer := dialers.TcpDialer{}

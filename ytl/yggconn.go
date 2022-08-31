@@ -87,7 +87,7 @@ type YggConn struct{
 	innerConn net.Conn
 	transport_key ed25519.PublicKey
 	allowList *static.AllowList
-	secureTranport bool
+	secureTranport uint
 	extraReadBuffChn chan []byte
 	err error
 	dm *DeduplicationManager
@@ -97,7 +97,7 @@ type YggConn struct{
 	isClosed chan bool
 }
 
-func ConnToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow *static.AllowList, secureTranport bool, dm *DeduplicationManager) *YggConn {
+func ConnToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow *static.AllowList, secureTranport uint, dm *DeduplicationManager) *YggConn {
 	if conn == nil {return nil}
 	isClosed := make(chan bool, 1)
 	isClosed <- false
@@ -251,7 +251,7 @@ func (y * YggConn) SetWriteDeadline(t time.Time) (err error) {
 
 type YggListener struct {
 	inner_listener static.TransportListener
-	secure bool
+	secure uint
 	dm *DeduplicationManager
 }
 
