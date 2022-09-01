@@ -97,3 +97,11 @@ type ConnClosedByDeduplicatorError struct {}
 func (e ConnClosedByDeduplicatorError) Error() string {
 	return fmt.Sprintf("Connection closed by deduplicator")
 }
+
+type UnacceptableAddressError struct {
+	Text string
+}
+
+func (e UnacceptableAddressError) Error() string {
+	return fmt.Sprintf("Unacceptable address: %s", e.Text)
+}

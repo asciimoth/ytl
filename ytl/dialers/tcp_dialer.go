@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"context"
 	"golang.org/x/net/proxy"
+	"github.com/DomesticMoth/ytl/ytl/addr"
 )
 
 type TcpDialer struct {
@@ -35,6 +36,7 @@ func (d *TcpDialer) DialContext(ctx context.Context, uri url.URL, proxy_uri *url
 	if use_proxy {
 		dialerdst, err := net.ResolveTCPAddr("tcp", proxy_uri.Host)
 		if err != nil { return nil, err }
+		if err = addr.CheckAddr(dialerdst.IP); err != nil { return nil, err }
 		auth := &proxy.Auth{}
 		if proxy_uri.User != nil {
 			auth.User = proxy_uri.User.Username()
@@ -45,10 +47,21 @@ func (d *TcpDialer) DialContext(ctx context.Context, uri url.URL, proxy_uri *url
 		ctx, cancel := context.WithTimeout(ctx, d.Timeout)
 		conn, err := innerDialer.(proxy.ContextDialer).DialContext(ctx, "tcp", uri.Host)
 		cancel()
+		laddr, _, _ := net.SplitHostPort(conn.LocalAddr().String())
+		raddr, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+		if err = addr.CheckAddr(net.ParseIP(laddr)); err != nil {
+			conn.Close()
+			return nil, err
+		}
+		if err = addr.CheckAddr(net.ParseIP(raddr)); err != nil {
+			conn.Close()
+			return nil, err
+		}
 		return conn, err
 	}else{
 		dst, err := net.ResolveTCPAddr("tcp", uri.Host)
 		if err != nil { return nil, err }
+		if err = addr.CheckAddr(dst.IP); err != nil { return nil, err }
 		innerDialer := net.Dialer{
 			Timeout: d.Timeout,
 			KeepAlive: d.KeepAlive,

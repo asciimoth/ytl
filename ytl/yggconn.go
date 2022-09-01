@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"github.com/DomesticMoth/ytl/ytl/static"
+	"github.com/DomesticMoth/ytl/ytl/addr"
 )
 
 
@@ -125,11 +126,23 @@ func (y * YggConn) setErr(err error) {
 	y.Close()
 }
 
+func (y * YggConn) checkAddr() {
+	laddr, _, _ := net.SplitHostPort(y.innerConn.LocalAddr().String())
+	raddr, _, _ := net.SplitHostPort(y.innerConn.RemoteAddr().String())
+	if err := addr.CheckAddr(net.ParseIP(laddr)); err != nil {
+		y.setErr(err)
+	}
+	if err := addr.CheckAddr(net.ParseIP(raddr)); err != nil {
+		y.setErr(err)
+	}
+}
+
 func (y * YggConn) middleware() {
 	onerror := func(e error) {
 		y.setErr(e)
 		y.extraReadBuffChn <- nil
 	}
+	y.checkAddr()
 	err, version, pkey, buf := parceMetaPackage(y.innerConn, time.Minute)
 	y.pVersion <- version
 	y.otherPublicKey <- pkey
