@@ -63,33 +63,28 @@ func TestParceMetaPackage(t *testing.T){
 	for _, cse := range cases {
 		err, version, pkey, buf := parceMetaPackage(cse.conn, time.Minute/2)
 		if err != cse.err {
-			t.Errorf("Wrong err %s %s", err, cse.err);
-			return
+			t.Fatalf("Wrong err %s %s", err, cse.err);
 		}
 		if version != nil && cse.version != nil {
 			if version.Major != cse.version.Major || version.Minor != cse.version.Minor {
-				t.Errorf("Wrong verison %s %s", version, cse.version);
-				return
+				t.Fatalf("Wrong verison %s %s", version, cse.version);
 			}
 		} else if version != cse.version {
-			t.Errorf("Wrong verison %s %s", version, cse.version);
-			return
+			t.Fatalf("Wrong verison %s %s", version, cse.version);
 		}
 		if bytes.Compare(pkey, cse.pkey) != 0 {
-			t.Errorf(
+			t.Fatalf(
 				"Wrong PublicKey %s %s", 
 				hex.EncodeToString(pkey),
 				hex.EncodeToString(cse.pkey),
 			);
-			return
 		}
 		if bytes.Compare(buf, cse.buf) != 0 {
-			t.Errorf(
+			t.Fatalf(
 				"Wrong buf %s %s",
 				hex.EncodeToString(buf),
 				hex.EncodeToString(cse.buf),
 			);
-			return
 		}
 	}
 }
@@ -174,9 +169,8 @@ func yggConnTestCollision(
 		_, err1 = io.ReadFull(yggcon2, buf)
 		_, err2 = io.ReadFull(yggcon1, buf)
 		if err1 != nil || err2 != nil {
-			t.Errorf("Conn was closed: %s; %s;", err1, err2)
+			t.Fatalf("Conn was closed: %s; %s;", err1, err2)
 		}
-		return
 	}
 	if n == 1 {
 		_, err1 = io.ReadFull(yggcon2, buf)
@@ -186,19 +180,16 @@ func yggConnTestCollision(
 		_, err2 = io.ReadFull(yggcon2, buf)
 	}
 	if err1 != nil {
-		t.Errorf("Wrong conn was closed: %s", err1)
-		return
+		t.Fatalf("Wrong conn was closed: %s", err1)
 	}
 	if err2 == nil {
-		t.Errorf("Connection was not closed")
-		return
+		t.Fatalf("Connection was not closed")
 	}
 	switch err2.(type) {
 		case static.ConnClosedByDeduplicatorError:
 		    // Ok
 		default:
-		    t.Errorf("Connection was not closed by deduplicator: %s", err2)
-		    return
+		    t.Fatalf("Connection was not closed by deduplicator: %s", err2)
 	}
 }
 

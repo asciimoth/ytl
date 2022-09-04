@@ -24,19 +24,16 @@ func testCollision(
 	cancel1 := manager.Check(key, n1, func(){ closeChn <- 1 })
 	cancel2 := manager.Check(key, n2, func(){ closeChn <- 2 })
 	if cancel1 == nil {
-		t.Errorf("Connection 1 was closed at the start")
-		return
+		t.Fatalf("Connection 1 was closed at the start")
 	}
 	if len(closeChn) > 1 {
-		t.Errorf("Connection close callback was called more than once")
-		return
+		t.Fatalf("Connection close callback was called more than once")
 	}
 	if len(closeChn) == 1 {
 		c := <- closeChn
 		closeChn <- c
 		if c == 2 {
-			t.Errorf("Second conn callback was called")
-			return
+			t.Fatalf("Second conn callback was called")
 		}
 	}
 	if n == 1 {
@@ -45,6 +42,7 @@ func testCollision(
 			if cancel2 == nil {
 				t.Errorf("Second connection was closed instead")
 			}
+			t,FailNow()
 		}
 	}else{
 		if cancel2 != nil {
@@ -52,6 +50,7 @@ func testCollision(
 			if len(closeChn) > 0 {
 				t.Errorf("First connection was closed instead")
 			}
+			t,FailNow()
 		}
 	}
 }
@@ -80,13 +79,11 @@ func TestNoCollision(t *testing.T){
 			key := make(ed25519.PublicKey, i+(10*secure))
 			cancel := manager.Check(key, uint(secure), func(){ chn <- key })
 			if cancel == nil {
-				t.Errorf("Connection closed")
-				return
+				t.Fatalf("Connection closed")
 			}
 		}
 	}
 	if len(chn) > 0 {
-		t.Errorf("Connection closed")
-		return
+		t.Fatalf("Connection closed")
 	}
 }

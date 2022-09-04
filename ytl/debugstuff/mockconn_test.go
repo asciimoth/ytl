@@ -23,7 +23,7 @@ func TestMockPubKeyGeneration(t *testing.T){
 		143,  73, 142,  61,  27, 142, 160, 212,
 	}
 	if bytes.Compare(key, correct) != 0 {
-		t.Errorf("Wrong mock PubKey %s", static.TransportSecurityCheckError{
+		t.Fatalf("Wrong mock PubKey %s", static.TransportSecurityCheckError{
 						Expected: correct,
 						Received: key,
 					})
