@@ -29,7 +29,8 @@ func (e ProtoVersion) String() string {
 type AllowList []ed25519.PublicKey
 
 func (a *AllowList) IsAllow(key ed25519.PublicKey) bool {
-	if a == nil || key == nil{ return true }
+	if a == nil { return true }
+	if key == nil{ return false }
 	for _, value := range *a {
 		if subtle.ConstantTimeCompare(value, key) == 1 { return true }
 	}
