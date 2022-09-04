@@ -22,8 +22,7 @@ type ProtoVersion struct {
 	Minor uint8
 }
 
-// Cursed hack to make struct printable
-func (e ProtoVersion) Error() string {
+func (e ProtoVersion) String() string {
 	return fmt.Sprintf("Version{%d.%d}", e.Major, e.Minor)
 }
 
