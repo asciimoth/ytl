@@ -29,6 +29,9 @@ type CaseTestParceMetaPackage struct {
 }
 
 func TestParceMetaPackage(t *testing.T){
+	if testing.Short() {
+		t.Skip("skipping TestParceMetaPackage in short mode.")
+	}
 	v := static.PROTO_VERSION()
 	v2 := static.ProtoVersion{1,5}
 	cases := []CaseTestParceMetaPackage{
@@ -58,7 +61,7 @@ func TestParceMetaPackage(t *testing.T){
 		},
 	};
 	for _, cse := range cases {
-		err, version, pkey, buf := parceMetaPackage(cse.conn, time.Second/2)
+		err, version, pkey, buf := parceMetaPackage(cse.conn, time.Minute/2)
 		if err != cse.err {
 			t.Errorf("Wrong err %s %s", err, cse.err);
 			return
