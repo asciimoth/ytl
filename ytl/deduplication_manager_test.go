@@ -42,7 +42,7 @@ func testCollision(
 			if cancel2 == nil {
 				t.Errorf("Second connection was closed instead")
 			}
-			t,FailNow()
+			t.FailNow()
 		}
 	}else{
 		if cancel2 != nil {
@@ -50,7 +50,7 @@ func testCollision(
 			if len(closeChn) > 0 {
 				t.Errorf("First connection was closed instead")
 			}
-			t,FailNow()
+			t.FailNow()
 		}
 	}
 }

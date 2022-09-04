@@ -171,6 +171,7 @@ func yggConnTestCollision(
 		if err1 != nil || err2 != nil {
 			t.Fatalf("Conn was closed: %s; %s;", err1, err2)
 		}
+		return
 	}
 	if n == 1 {
 		_, err1 = io.ReadFull(yggcon2, buf)
