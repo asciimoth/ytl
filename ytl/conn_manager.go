@@ -142,7 +142,7 @@ func (c * ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
 		listener, e := transport.Listen(c.ctx, uri, c.key)
 		err = e
 		if err != nil { return }
-		ygg = YggListener{listener, transport.IsSecure(), c.dm}
+		ygg = YggListener{listener, transport.IsSecure(), c.dm, c.allowList}
 		return
 	}
 	err = static.UnknownSchemeError{Scheme: uri.Scheme}

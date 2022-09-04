@@ -266,13 +266,14 @@ type YggListener struct {
 	inner_listener static.TransportListener
 	secure uint
 	dm *DeduplicationManager
+	allowList *static.AllowList
 }
 
 // Accept waits for and returns the next connection to the listener.
 func (y * YggListener) Accept() (ygg YggConn, err error) {
 	conn, tkey, err := y.inner_listener.AcceptKey()
 	if err != nil { return }
-	yggr := ConnToYggConn(conn, tkey, nil, y.secure, y.dm)
+	yggr := ConnToYggConn(conn, tkey, y.allowList, y.secure, y.dm)
 	ygg = *yggr
 	return
 }
