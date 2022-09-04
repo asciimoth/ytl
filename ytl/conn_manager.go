@@ -27,6 +27,14 @@ func materialise(key ed25519.PrivateKey) ed25519.PrivateKey {
 	return spriv
 }
 
+func transportsListToMap(list []static.Transport) map[string]static.Transport{
+	transports_map := make(map[string]static.Transport)
+	for _, transport := range list{
+		transports_map[transport.GetScheme()] = transport
+	}
+	return transports_map
+}
+
 type ConnManager struct{
 	transports map[string]static.Transport
 	key ed25519.PrivateKey
@@ -37,15 +45,12 @@ type ConnManager struct{
 }
 
 func NewConnManager(ctx context.Context, key ed25519.PrivateKey, proxy *ProxyManager, dm *DeduplicationManager, allowList *static.AllowList) *ConnManager{
-	transports_list := make(map[string]static.Transport)
-	for _, transport := range transports.TransportsList{
-		transports_list[transport.GetScheme()] = transport
-	}
+	transports_map := transportsListToMap(transports.TransportsList)
 	if proxy == nil {
 		p := NewProxyManager(nil, nil)
 		proxy = &p
 	}
-	return &ConnManager{transports_list, key, *proxy, allowList, ctx, dm}
+	return &ConnManager{transports_map, key, *proxy, allowList, ctx, dm}
 }
 
 func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn, error) {
