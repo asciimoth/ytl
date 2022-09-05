@@ -54,13 +54,37 @@ type ConnManager struct{
 	dm *DeduplicationManager
 }
 
-func NewConnManager(ctx context.Context, key ed25519.PrivateKey, proxy *ProxyManager, dm *DeduplicationManager, allowList *static.AllowList) *ConnManager{
-	transports_map := transportsListToMap(transports.TransportsList)
+func NewConnManagerWithTransports(
+		ctx context.Context, 
+		key ed25519.PrivateKey, 
+		proxy *ProxyManager, 
+		dm *DeduplicationManager, 
+		allowList *static.AllowList,
+		transports []static.Transport,
+	) *ConnManager{
+	transports_map := transportsListToMap(transports)
 	if proxy == nil {
 		p := NewProxyManager(nil, nil)
 		proxy = &p
 	}
 	return &ConnManager{transports_map, key, *proxy, allowList, ctx, dm}
+}
+
+func NewConnManager(
+		ctx context.Context, 
+		key ed25519.PrivateKey, 
+		proxy *ProxyManager, 
+		dm *DeduplicationManager, 
+		allowList *static.AllowList,
+	) *ConnManager{
+	return NewConnManagerWithTransports(
+		ctx,
+		key,
+		proxy,
+		dm,
+		allowList,
+		transports.TransportsList,
+	)
 }
 
 func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn, error) {
