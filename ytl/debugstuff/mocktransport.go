@@ -29,6 +29,10 @@ import(
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
 
+func formatMockTransportInfo(scheme string, uri url.URL, proxy *url.URL)string {
+	return fmt.Sprintf("{'transport name': '%s', 'uri': '%s', 'proxy': '%s'}", scheme, uri, proxy)
+}
+
 type MockTransportListener struct {
 	transport static.Transport
 	uri url.URL
@@ -87,14 +91,13 @@ func (t MockTransport) Connect(
 		109, 101, 116, 97, // 'm' 'e' 't' 'a'
 		0, 4, // Version
 	}
-	info := fmt.Sprintf("{'transport name': '%s', 'uri': '%s', 'proxy': '%s'}", t.Scheme, uri, proxy)
 	time.Sleep(delay_conn)
 	go func(){
 		time.Sleep(delay_before_meta)
 		input.Write(header)
 		input.Write(opponent_key)
 		time.Sleep(delay_after_meta)
-		input.Write([]byte(info))
+		input.Write([]byte(formatMockTransportInfo(t.Scheme, uri, proxy)))
 		buf := make([]byte, 1)
 		for {
 			_, err := input.Read(buf)
