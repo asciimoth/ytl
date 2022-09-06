@@ -22,6 +22,8 @@ import (
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
 
-var TransportsList = []static.Transport{
-	TcpTransport{},
+func DEFAULT_TRANSPORTS() []static.Transport {
+	return []static.Transport{
+		TcpTransport{},
+	}
 }

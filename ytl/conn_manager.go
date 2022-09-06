@@ -83,7 +83,7 @@ func NewConnManager(
 		proxy,
 		dm,
 		allowList,
-		transports.TransportsList,
+		transports.DEFAULT_TRANSPORTS(),
 	)
 }
 
