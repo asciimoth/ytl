@@ -29,8 +29,34 @@ import(
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
 
-func formatMockTransportInfo(scheme string, uri url.URL, proxy *url.URL)string {
-	return fmt.Sprintf("{'transport name': '%s', 'uri': '%s', 'proxy': '%s'}", scheme, uri, proxy)
+func formatMockTransportInfo(scheme string, uri url.URL, proxy *url.URL, ctx_closed bool)string {
+	return fmt.Sprintf(
+		"{'transport name': '%s', 'uri': '%s', 'proxy': '%s', 'ctx closed': '%t'}",
+		scheme, uri, proxy, ctx_closed,
+	)
+}
+
+func getPubKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
+	if pubkeys, ok := uri.Query()[key]; ok && len(pubkeys) > 0 {
+		for _, pubkey := range pubkeys {
+			if opkey, err := hex.DecodeString(pubkey); err == nil {
+				return opkey
+			}
+		}
+	}
+	return make(ed25519.PublicKey, ed25519.PublicKeySize)
+}
+
+func getDurationFromUri(uri url.URL, key string) time.Duration {
+	if durations, ok := uri.Query()[key]; ok && len(durations) > 0 {
+		for _, duration := range durations {
+			d, err := time.ParseDuration(duration)
+			if err == nil {
+				return d
+			}
+		}
+	}
+	return 0
 }
 
 type MockTransportListener struct {
@@ -75,29 +101,30 @@ func (t MockTransport) Connect(
 		proxy *url.URL,
 		key ed25519.PrivateKey,
 	) (net.Conn, ed25519.PublicKey, error) {
-	opponent_key := make(ed25519.PublicKey, ed25519.PublicKeySize)
-	delay_conn := time.Second * 0
-	delay_before_meta := time.Second * 0
-	delay_after_meta := time.Second * 0
-	if pubkeys, ok := uri.Query()["mock_tranport_key"]; ok && len(pubkeys) > 0 {
-		for _, pubkey := range pubkeys {
-			if opkey, err := hex.DecodeString(pubkey); err == nil {
-				opponent_key = opkey
-			}
-		}
-	}
+	opponent_key := getPubKeyFromUri(uri, "mock_tranport_key")
+	delay_conn := getDurationFromUri(uri, "mock_delay_conn")
+	delay_before_meta := getDurationFromUri(uri, "mock_delay_before_meta")
+	delay_after_meta := getDurationFromUri(uri, "mock_delay_after_meta")
+	ctx_closed := false
 	input, output := net.Pipe()
 	header := []byte{
 		109, 101, 116, 97, // 'm' 'e' 't' 'a'
 		0, 4, // Version
 	}
-	time.Sleep(delay_conn)
+	wait := time.After(delay_conn)
+	select {
+		case <- wait:
+			// Do nothing
+		case <- ctx.Done():
+			ctx_closed = true
+			<- wait
+	}
 	go func(){
 		time.Sleep(delay_before_meta)
 		input.Write(header)
 		input.Write(opponent_key)
 		time.Sleep(delay_after_meta)
-		input.Write([]byte(formatMockTransportInfo(t.Scheme, uri, proxy)))
+		input.Write([]byte(formatMockTransportInfo(t.Scheme, uri, proxy, ctx_closed)))
 		buf := make([]byte, 1)
 		for {
 			_, err := input.Read(buf)
