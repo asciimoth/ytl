@@ -95,12 +95,7 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 		allowList = &allow
 	}
 	if pubkeys, ok := uri.Query()["key"]; ok && len(pubkeys) > 0 {
-		var allow static.AllowList
-		if allowList == nil {
-			allow = make(static.AllowList, 0)
-		}else{
-			allow = *allowList
-		}
+		allow := make(static.AllowList, 0)
 		for _, pubkey := range pubkeys {
 			if key, err := hex.DecodeString(pubkey); err == nil {
 				allow = append(allow, key)
