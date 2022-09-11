@@ -35,17 +35,15 @@ func (t TcpTransport) GetScheme() string {
     return TcpScheme
 }
 
-func (t TcpTransport) IsSecure() uint {
-	return static.SECURE_LVL_UNSECURE
-}
-
-func (t TcpTransport) Connect(ctx context.Context, uri url.URL, proxy *url.URL, key ed25519.PrivateKey) (net.Conn, ed25519.PublicKey, error) {
+func (t TcpTransport) Connect(ctx context.Context, uri url.URL, proxy *url.URL, key ed25519.PrivateKey) (static.ConnResult, error) {
 	dialer := dialers.TcpDialer{}
 	conn, err := dialer.DialContext(ctx, uri, proxy)
-	return conn, nil, err
+	return static.ConnResult{
+		conn, nil, static.SECURE_LVL_UNSECURE,
+	}, err
 }
 
 func (t TcpTransport) Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (static.TransportListener, error) {
 	l, e := net.Listen(TcpScheme, uri.Host)
-	return static.ListenerToTransportListener(l), e
+	return static.ListenerToTransportListener(l, static.SECURE_LVL_UNSECURE), e
 }

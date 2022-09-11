@@ -65,11 +65,11 @@ type MockTransportListener struct {
 }
 
 func (l *MockTransportListener) Accept() (net.Conn, error) {
-	conn, _, err := l.AcceptKey()
-	return conn, err
+	conn, err := l.AcceptConn()
+	return conn.Conn, err
 }
 
-func (l *MockTransportListener) AcceptKey() (net.Conn, ed25519.PublicKey, error) {
+func (l *MockTransportListener) AcceptConn() (static.ConnResult, error) {
 	ctx := context.Background()
 	return l.transport.Connect(ctx, l.uri, nil, nil)
 }
@@ -91,16 +91,12 @@ func (t MockTransport) GetScheme() string {
     return t.Scheme
 }
 
-func (t MockTransport) IsSecure() uint {
-	return t.SecureLvl
-}
-
 func (t MockTransport) Connect(
 		ctx context.Context,
 		uri url.URL,
 		proxy *url.URL,
 		key ed25519.PrivateKey,
-	) (net.Conn, ed25519.PublicKey, error) {
+	) (static.ConnResult, error) {
 	opponent_key := getPubKeyFromUri(uri, "mock_tranport_key")
 	delay_conn := getDurationFromUri(uri, "mock_delay_conn")
 	delay_before_meta := getDurationFromUri(uri, "mock_delay_before_meta")
@@ -132,7 +128,7 @@ func (t MockTransport) Connect(
 		}
 		input.Close()
 	}()	
-	return output, nil, nil
+	return static.ConnResult{output, nil, t.SecureLvl}, nil
 }
 
 func (t MockTransport) Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (static.TransportListener, error) {

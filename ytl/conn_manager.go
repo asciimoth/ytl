@@ -109,16 +109,16 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 		allowList = &allow
 	}
 	if transport, ok := c.transports[uri.Scheme]; ok {
-		conn, transport_key, err := transport.Connect(ctx, uri, c.proxyManager.Get(uri), materialise(c.key))
+		conn, err := transport.Connect(ctx, uri, c.proxyManager.Get(uri), materialise(c.key))
 		if allowList != nil {
-			if !allowList.IsAllow(transport_key) || transport_key == nil{
-				conn.Close()
+			if !allowList.IsAllow(conn.Pkey) || conn.Pkey == nil{
+				conn.Conn.Close()
 				return nil, static.IvalidPeerPublicKey{
 					Text: "Key received from the peer is not in the allow list",
 				}
 			}
 		}
-		return ConnToYggConn(conn, transport_key, allowList, transport.IsSecure(), c.dm), err
+		return ConnToYggConn(conn.Conn, conn.Pkey, allowList, conn.SecurityLevel, c.dm), err
 	}
 	return nil, static.UnknownSchemeError{Scheme: uri.Scheme}
 }
@@ -181,7 +181,7 @@ func (c * ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
 		listener, e := transport.Listen(c.ctx, uri, c.key)
 		err = e
 		if err != nil { return }
-		ygg = YggListener{listener, transport.IsSecure(), c.dm, c.allowList}
+		ygg = YggListener{listener, c.dm, c.allowList}
 		return
 	}
 	err = static.UnknownSchemeError{Scheme: uri.Scheme}

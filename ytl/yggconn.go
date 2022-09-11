@@ -274,16 +274,15 @@ func (y * YggConn) SetWriteDeadline(t time.Time) (err error) {
 
 type YggListener struct {
 	inner_listener static.TransportListener
-	secure uint
 	dm *DeduplicationManager
 	allowList *static.AllowList
 }
 
 // Accept waits for and returns the next connection to the listener.
 func (y * YggListener) Accept() (ygg YggConn, err error) {
-	conn, tkey, err := y.inner_listener.AcceptKey()
+	conn, err := y.inner_listener.AcceptConn()
 	if err != nil { return }
-	yggr := ConnToYggConn(conn, tkey, y.allowList, y.secure, y.dm)
+	yggr := ConnToYggConn(conn.Conn, conn.Pkey, y.allowList, conn.SecurityLevel, y.dm)
 	ygg = *yggr
 	return
 }

@@ -47,12 +47,18 @@ func (a *AllowList) IsAllow(key ed25519.PublicKey) bool {
 	return false
 }
 
+type ConnResult struct {
+	Conn net.Conn
+	Pkey ed25519.PublicKey
+	SecurityLevel uint
+}
+
 type TransportListener interface {
 	// Accept waits for and returns the next connection to the listener.
 	Accept() (net.Conn, error)
 
 	// Accept waits for and returns the next connection with optional transport key to the listener.
-	AcceptKey() (net.Conn, ed25519.PublicKey, error)
+	AcceptConn() (ConnResult, error)
 
 	// Close closes the listener.
 	// Any blocked Accept operations will be unblocked and return errors.
@@ -64,15 +70,16 @@ type TransportListener interface {
 
 type baseTransportListener struct {
 	inner net.Listener
+	securityLevel uint
 }
 
 func (l *baseTransportListener) Accept() (net.Conn, error) {
 	return l.inner.Accept()
 }
 
-func (l *baseTransportListener) AcceptKey() (net.Conn, ed25519.PublicKey, error) {
+func (l *baseTransportListener) AcceptConn() (ConnResult, error) {
 	c, e := l.inner.Accept()
-	return c, nil, e
+	return ConnResult{c, nil, l.securityLevel}, e
 }
 
 func (l *baseTransportListener) Close() error {
@@ -83,13 +90,12 @@ func (l *baseTransportListener) Addr() net.Addr {
 	return l.inner.Addr()
 }
 
-func ListenerToTransportListener(linstener net.Listener) TransportListener {
-	return &baseTransportListener{linstener}
+func ListenerToTransportListener(linstener net.Listener, secLvl uint) TransportListener {
+	return &baseTransportListener{linstener, secLvl}
 }
 
 type Transport interface {
 	GetScheme() string
-	IsSecure() uint
-	Connect(ctx context.Context, uri url.URL, proxy *url.URL, key ed25519.PrivateKey) (net.Conn, ed25519.PublicKey, error)
+	Connect(ctx context.Context, uri url.URL, proxy *url.URL, key ed25519.PrivateKey) (ConnResult, error)
 	Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (TransportListener, error)
 }
