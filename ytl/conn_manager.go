@@ -113,9 +113,9 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 		if allowList != nil {
 			if !allowList.IsAllow(transport_key) || transport_key == nil{
 				conn.Close()
-					return nil, static.IvalidPeerPublicKey{
-						Text: "Key received from the peer is not in the allow list",
-					}
+				return nil, static.IvalidPeerPublicKey{
+					Text: "Key received from the peer is not in the allow list",
+				}
 			}
 		}
 		return ConnToYggConn(conn, transport_key, allowList, transport.IsSecure(), c.dm), err
