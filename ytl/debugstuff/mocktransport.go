@@ -33,7 +33,7 @@ import(
 func formatMockTransportInfo(scheme string, uri url.URL, proxy *url.URL, ctx_closed bool)string {
 	return fmt.Sprintf(
 		"{'transport name': '%s', 'uri': '%s', 'proxy': '%s', 'ctx closed': '%t'}",
-		scheme, uri, proxy, ctx_closed,
+		scheme, uri.String(), proxy.String(), ctx_closed,
 	)
 }
 
