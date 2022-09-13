@@ -136,36 +136,38 @@ func (y * YggConn) setErr(err error) {
 	y.Close()
 }
 
-func (y * YggConn) checkAddr() {
+func (y * YggConn) checkAddr() bool {
 	laddr, _, _ := net.SplitHostPort(y.innerConn.LocalAddr().String())
 	raddr, _, _ := net.SplitHostPort(y.innerConn.RemoteAddr().String())
 	if err := addr.CheckAddr(net.ParseIP(laddr)); err != nil {
 		y.setErr(err)
+		return true
 	}
 	if err := addr.CheckAddr(net.ParseIP(raddr)); err != nil {
 		y.setErr(err)
+		return true
 	}
+	return false
 }
 
 func (y * YggConn) middleware() {
-	onerror := func(e error) {
-		y.setErr(e)
-		y.extraReadBuffChn <- nil
-	}
-	y.checkAddr()
+	var extraReadBuff []byte = nil
+	defer func(){ y.extraReadBuffChn <- extraReadBuff }()
+	// We must do this in middleware and not in constructor because it may spend much time
+	if y.checkAddr() { return }
 	err, version, pkey, buf := parceMetaPackage(y.innerConn, time.Minute)
 	y.pVersion <- version
 	y.otherPublicKey <- pkey
 	if len(buf) == 0 { buf = nil }
 	if err != nil  {
-		onerror(err)
+		y.setErr(err)
 		return
 	}
-	// Check if node keq equal transport key
+	// Check if node key equal transport key
 	if y.transport_key != nil {
 		if bytes.Compare(y.transport_key, pkey) != 0 {
 			// Invalid transport key
-			onerror(static.TransportSecurityCheckError{
+			y.setErr(static.TransportSecurityCheckError{
 				Expected: y.transport_key,
 				Received: pkey,
 			})
@@ -175,7 +177,7 @@ func (y * YggConn) middleware() {
 	if y.allowList != nil {
 		if !y.allowList.IsAllow(pkey) {
 			// TODO Write more human readable error text
-			onerror(static.IvalidPeerPublicKey{
+			y.setErr(static.IvalidPeerPublicKey{
 				"Key received from the peer is not in the allow list",
 			})
 			return
@@ -186,13 +188,13 @@ func (y * YggConn) middleware() {
 			y.setErr(static.ConnClosedByDeduplicatorError{})
 		})
 		if closefunc == nil {
-			onerror(static.ConnClosedByDeduplicatorError{})
+			y.setErr(static.ConnClosedByDeduplicatorError{})
 			return
 		}
 		y.closefn = closefunc
 	}
-	// 
-	y.extraReadBuffChn <- buf
+	//
+	extraReadBuff = buf
 }
 
 func (y * YggConn) GetVer() (*static.ProtoVersion, error) {
