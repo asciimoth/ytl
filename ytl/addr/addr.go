@@ -32,7 +32,7 @@ func CheckAddr(ip net.IP) error {
 		copy(addr[:], ipaddr)
 		copy(subnet[:], ipaddr)
 		if addr.IsValid() || subnet.IsValid() {
-			// Destionation addr is inside yggfrasil network
+			// Destionation addr is inside yggdrasil network
 			return static.UnacceptableAddressError{"ygg over ygg routing"}
 		}
 	}
