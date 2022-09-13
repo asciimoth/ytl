@@ -19,6 +19,7 @@
 package debugstuff
 
 import(
+	"io"
 	"fmt"
 	"net"
 	"time"
@@ -34,6 +35,14 @@ func formatMockTransportInfo(scheme string, uri url.URL, proxy *url.URL, ctx_clo
 		"{'transport name': '%s', 'uri': '%s', 'proxy': '%s', 'ctx closed': '%t'}",
 		scheme, uri, proxy, ctx_closed,
 	)
+}
+
+func readMockTransportInfo(conn net.Conn) string {
+	b, err := io.ReadAll(conn)
+	if err == nil {
+		return ""
+	}
+	return string(b)
 }
 
 func getPubKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
