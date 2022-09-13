@@ -106,7 +106,7 @@ func TestYggConnCorrectReading(t *testing.T){
 		for secure := 0; secure < 2; secure++ {
 			data := debugstuff.MockConnContent()
 			a := debugstuff.MockConn()
-			dm := NewDeduplicationManager(strictMode)
+			dm := NewDeduplicationManager(strictMode, nil)
 			yggcon := ConnToYggConn(
 				a,
 				debugstuff.MockPubKey(),
@@ -151,7 +151,7 @@ func yggConnTestCollision(
 		n1, n2 uint, // secure params for connections
 		n int, // The number of the connection to be CLOSED
 	) {
-	dm := NewDeduplicationManager(true)
+	dm := NewDeduplicationManager(true, nil)
 	if n == 0 {
 		dm = nil
 	}

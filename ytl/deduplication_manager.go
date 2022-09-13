@@ -19,6 +19,7 @@
 package ytl
 
 import (
+	"bytes"
 	"encoding/hex"
 	"crypto/ed25519"
 )
@@ -38,12 +39,13 @@ type DeduplicationManager struct {
 	connections map[string]connInfo
 	connId uint64
 	secureMode bool
+	blockKey ed25519.PublicKey
 }
 
-func NewDeduplicationManager(secureMode bool) *DeduplicationManager {
+func NewDeduplicationManager(secureMode bool, blockKey ed25519.PublicKey) *DeduplicationManager {
 	lock := make(chan struct{}, 1)
 	lock <- struct{}{}
-	return &DeduplicationManager{lock, make(map[string]connInfo), 0, secureMode}
+	return &DeduplicationManager{lock, make(map[string]connInfo), 0, secureMode, blockKey}
 }
 
 func (d *DeduplicationManager) lock() {
@@ -71,6 +73,7 @@ func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure uint, closeMethod func()) func(){
 	d.lock()
 	defer d.unlock()
+	if d.blockKey != nil && bytes.Compare(d.blockKey, key) == 0{ return nil }
 	strKey := ketToStr(key)
 	if value, ok := d.connections[strKey]; ok {
 		if !d.secureMode { return nil }

@@ -23,12 +23,22 @@ import (
 	"crypto/ed25519"
 )
 
+func TestBlockKeyCollision(t *testing.T){
+	key := make(ed25519.PublicKey, ed25519.PublicKeySize)
+	manager := NewDeduplicationManager(true, key)
+	closeChn := make(chan int, 10)
+	cancel := manager.Check(key, 1000, func(){ closeChn <- 1 })
+	if cancel != nil {
+		t.Errorf("Connection was not closed")
+	}
+}
+
 func testCollision(
 		t *testing.T, 
 		n1, n2 uint, // secure params for connections
 		n uint, // The number of the connection to be CLOSED
 	) {
-	manager := NewDeduplicationManager(true)
+	manager := NewDeduplicationManager(true, nil)
 	closeChn := make(chan int, 10)
 	key := make(ed25519.PublicKey, ed25519.PublicKeySize)
 	cancel1 := manager.Check(key, n1, func(){ closeChn <- 1 })
@@ -82,7 +92,7 @@ func TestCollisionSS(t *testing.T){
 }
 
 func TestNoCollision(t *testing.T){
-	manager := NewDeduplicationManager(true)
+	manager := NewDeduplicationManager(true, nil)
 	chn := make(chan ed25519.PublicKey, 1)
 	for i := 0; i < 10; i++ {
 		for secure := 0; secure < 2; secure++ {
