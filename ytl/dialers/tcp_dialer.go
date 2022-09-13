@@ -57,6 +57,7 @@ func (d *TcpDialer) DialContext(ctx context.Context, uri url.URL, proxy_uri *url
 		ctx, cancel := context.WithTimeout(ctx, d.Timeout)
 		conn, err := innerDialer.(proxy.ContextDialer).DialContext(ctx, "tcp", uri.Host)
 		cancel()
+		if err != nil { return nil, err }
 		laddr, _, _ := net.SplitHostPort(conn.LocalAddr().String())
 		raddr, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 		if err = addr.CheckAddr(net.ParseIP(laddr)); err != nil {
