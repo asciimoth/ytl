@@ -56,6 +56,17 @@ func getPubKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
 	return make(ed25519.PublicKey, ed25519.PublicKeySize)
 }
 
+func getTransportKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
+	if pubkeys, ok := uri.Query()[key]; ok && len(pubkeys) > 0 {
+		for _, pubkey := range pubkeys {
+			if opkey, err := hex.DecodeString(pubkey); err == nil {
+				return opkey
+			}
+		}
+	}
+	return nil
+}
+
 func getDurationFromUri(uri url.URL, key string) time.Duration {
 	if durations, ok := uri.Query()[key]; ok && len(durations) > 0 {
 		for _, duration := range durations {
@@ -106,7 +117,8 @@ func (t MockTransport) Connect(
 		proxy *url.URL,
 		key ed25519.PrivateKey,
 	) (static.ConnResult, error) {
-	opponent_key := getPubKeyFromUri(uri, "mock_tranport_key")
+	opponent_key := getPubKeyFromUri(uri, "mock_peer_key")
+	transport_key := getTransportKeyFromUri(uri, "mock_transport_key")
 	delay_conn := getDurationFromUri(uri, "mock_delay_conn")
 	delay_before_meta := getDurationFromUri(uri, "mock_delay_before_meta")
 	delay_after_meta := getDurationFromUri(uri, "mock_delay_after_meta")
@@ -137,7 +149,7 @@ func (t MockTransport) Connect(
 		}
 		input.Close()
 	}()	
-	return static.ConnResult{output, nil, t.SecureLvl}, nil
+	return static.ConnResult{output, transport_key, t.SecureLvl}, nil
 }
 
 func (t MockTransport) Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (static.TransportListener, error) {
