@@ -77,10 +77,10 @@ func TestParceMetaPackage(t *testing.T) {
 		}
 		if version != nil && cse.version != nil {
 			if version.Major != cse.version.Major || version.Minor != cse.version.Minor {
-				t.Fatalf("Wrong verison %s %s", version, cse.version)
+				t.Fatalf("Wrong version %s %s", version, cse.version)
 			}
 		} else if version != cse.version {
-			t.Fatalf("Wrong verison %s %s", version, cse.version)
+			t.Fatalf("Wrong version %s %s", version, cse.version)
 		}
 		if bytes.Compare(pkey, cse.pkey) != 0 {
 			t.Fatalf(
