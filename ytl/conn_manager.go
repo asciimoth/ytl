@@ -87,7 +87,7 @@ func NewConnManager(
 	)
 }
 
-func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn, error) {
+func (c * ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, error) {
 	var allowList *static.AllowList = nil
 	if c.allowList != nil {
 		allow := make(static.AllowList, len(*c.allowList))
@@ -124,23 +124,19 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 }
 
 func (c * ConnManager) Connect(uri url.URL) (*YggConn, error) {
-	return c.innerConnect(c.ctx, uri)
+	return c.ConnectCtx(c.ctx, uri)
 }
 
 func (c * ConnManager) ConnectStr(uri string) (*YggConn, error) {
 	u, err := url.Parse(uri)
 	if err != nil { return nil, err }
-	return c.innerConnect(c.ctx, *u)
-}
-
-func (c * ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, error) {
-	return c.innerConnect(ctx, uri)
+	return c.ConnectCtx(c.ctx, *u)
 }
 
 func (c * ConnManager) ConnectCtxStr(ctx context.Context, uri string) (*YggConn, error) {
 	u, err := url.Parse(uri)
 	if err != nil { return nil, err }
-	return c.innerConnect(ctx, *u)
+	return c.ConnectCtx(ctx, *u)
 }
 
 func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggConn, error) {
@@ -151,7 +147,7 @@ func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggC
     result := make(chan Result, 1)
     ctx, cancel := context.WithTimeout(c.ctx, timeout)
     go func() {
-    	conn, err := c.innerConnect(ctx, uri)
+    	conn, err := c.ConnectCtx(ctx, uri)
         result <- Result{conn, err}
     }()
     select {
