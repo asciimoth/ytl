@@ -43,7 +43,7 @@ func TestParceMetaPackage(t *testing.T){
 		t.Skip("skipping TestParceMetaPackage in short mode.")
 	}
 	v := static.PROTO_VERSION()
-	v2 := static.ProtoVersion{1,5}
+	v2 := static.ProtoVersion{Major: 1, Minor: 5}
 	cases := []CaseTestParceMetaPackage{
 		CaseTestParceMetaPackage{
 			debugstuff.MockConn(),

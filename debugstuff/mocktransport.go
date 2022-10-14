@@ -175,7 +175,11 @@ func (t MockTransport) Connect(
 		}
 		input.Close()
 	}()	
-	return static.ConnResult{output, transport_key, t.SecureLvl}, nil
+	return static.ConnResult{
+		Conn: output,
+		Pkey: transport_key,
+		SecurityLevel: t.SecureLvl,
+	}, nil
 }
 
 func (t MockTransport) Listen(ctx context.Context, uri url.URL, key ed25519.PrivateKey) (static.TransportListener, error) {

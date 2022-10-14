@@ -29,7 +29,9 @@ import (
 func testTcpDialerLoopRoutingProtection(
 	t *testing.T, addr url.URL, proxy *url.URL, isYggOverYgg bool,
 	){
-	correct_error_text := static.UnacceptableAddressError{"ygg over ygg routing"}.Error()
+	correct_error_text := static.UnacceptableAddressError{
+		Text: "ygg over ygg routing",
+	}.Error()
 	dialer := TcpDialer{}
 	_, err := dialer.Dial(addr, proxy)
 	if isYggOverYgg {

@@ -44,8 +44,8 @@ func internalParceMetaPackage(conn net.Conn) (
 		return
 	}
 	version = &static.ProtoVersion{
-		buf[len(static.META_HEADER())],
-		buf[len(static.META_HEADER())+1],
+		Major: buf[len(static.META_HEADER())],
+		Minor: buf[len(static.META_HEADER())+1],
 	}
 	target_version := static.PROTO_VERSION()
 	if version.Major != target_version.Major || version.Minor != target_version.Minor {
@@ -91,7 +91,6 @@ func parceMetaPackage(conn net.Conn, timeout time.Duration) (
 			buf = ret.buf
         	return
 	}
-	return
 }
 
 type YggConn struct{
@@ -178,7 +177,7 @@ func (y * YggConn) middleware() {
 		if !y.allowList.IsAllow(pkey) {
 			// TODO Write more human readable error text
 			y.setErr(static.IvalidPeerPublicKey{
-				"Key received from the peer is not in the allow list",
+				Text: "Key received from the peer is not in the allow list",
 			})
 			return
 		}

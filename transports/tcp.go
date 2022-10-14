@@ -39,7 +39,9 @@ func (t TcpTransport) Connect(ctx context.Context, uri url.URL, proxy *url.URL, 
 	dialer := dialers.TcpDialer{}
 	conn, err := dialer.DialContext(ctx, uri, proxy)
 	return static.ConnResult{
-		conn, nil, static.SECURE_LVL_UNSECURE,
+		Conn: conn,
+		Pkey: nil,
+		SecurityLevel: static.SECURE_LVL_UNSECURE,
 	}, err
 }
 

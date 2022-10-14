@@ -47,9 +47,9 @@ func TestConnManagerTransportSelection(t *testing.T){
 		t.Skip("skipping TestConnManagerTransportSelection in short mode.")
 	}
 	transportsObjects := []static.Transport{
-		debugstuff.MockTransport{"a", 0},
-		debugstuff.MockTransport{"b", 0},
-		debugstuff.MockTransport{"c", 0},
+		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
+		debugstuff.MockTransport{Scheme: "b", SecureLvl: 0},
+		debugstuff.MockTransport{Scheme: "c", SecureLvl: 0},
 	}
 	type Case struct{
 		Scheme string
@@ -93,7 +93,9 @@ func TestConnManagerKeyMaterialisation(t *testing.T){
 	if testing.Short() {
 		t.Skip("skipping TestConnManagerKeyMaterialisation in short mode.")
 	}
-	transports := []static.Transport{debugstuff.MockTransport{"a", 0}}
+	transports := []static.Transport{
+		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
+	}
 	uri, _ := url.Parse("a://host:123")
 	for _, key := range []ed25519.PrivateKey{
 		nil, 
@@ -128,7 +130,9 @@ func TestConnManagerKeyMaterialisation(t *testing.T){
 }
 
 func TestConnManagerNoAllowList(t *testing.T){
-	transports := []static.Transport{debugstuff.MockTransport{"a", 0}}
+	transports := []static.Transport{
+		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
+	}
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	for i := 0; i < 1000; i++ {
 		manager := NewConnManagerWithTransports(
@@ -161,7 +165,9 @@ func publicKeyFromOptionalKey(key ed25519.PublicKey) ed25519.PublicKey {
 
 func TestConnManagerAllowList(t *testing.T){
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
-	transports := []static.Transport{debugstuff.MockTransport{"a", 0}}
+	transports := []static.Transport{
+		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
+	}
 	allow1 := make(ed25519.PublicKey, ed25519.PublicKeySize)
 	allow2 := make(ed25519.PublicKey, ed25519.PublicKeySize)
 	allow1[0] = 1
@@ -202,7 +208,9 @@ func TestConnManagerAllowList(t *testing.T){
 
 func TestConnManagerIgnoreAllowList(t *testing.T){
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
-	transports := []static.Transport{debugstuff.MockTransport{"a", 0}}
+	transports := []static.Transport{
+		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
+	}
 	allow := make(ed25519.PublicKey, ed25519.PublicKeySize)
 	allowList := static.AllowList{allow}
 	testkey := func(key ed25519.PublicKey)(net.Conn, error){
