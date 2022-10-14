@@ -104,6 +104,7 @@ func TestMockTransportInfo(t *testing.T){
 	uri, _ := url.Parse("scheme://addr:137")
 	p, _ := url.Parse("socks://addr:137")
 	proxys := []*url.URL{nil, p}
+	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	for _, proxy := range proxys {
 		res, e := transport.Connect(
 			context.Background(),
@@ -117,12 +118,18 @@ func TestMockTransportInfo(t *testing.T){
 		io.ReadFull(res.Conn, make([]byte, 6+ed25519.PublicKeySize)) // 6 is header size
 		ri := make(chan string)
 		go func(){
-			ri <- readMockTransportInfo(res.Conn)
+			ri <- ReadMockTransportInfo(res.Conn)
 		}()
 		time.Sleep(1000000000) // Wait for all info writed to conn
 		res.Conn.Close() // Close conn
 		recvInfo := <- ri
-		correctInfo := formatMockTransportInfo(transport.Scheme, *uri, proxy, false)
+		correctInfo := FormatMockTransportInfo(
+			transport.Scheme,
+			*uri,
+			proxy,
+			false,
+			pkey,
+		)
 		if recvInfo != correctInfo {
 			t.Errorf("Wrong transport info '%s' '%s'", correctInfo, recvInfo)
 		}
@@ -136,6 +143,7 @@ func TestMockTransportCloseCTX(t *testing.T){
 	delay, _ := time.ParseDuration("2s")
 	transport := MockTransport{"scheme", 0}
 	uri, _ := url.Parse("scheme://addr:137?mock_delay_conn=2s")
+	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	for _, closectx := range []bool{false, true} {
 		ctx, cancel := context.WithTimeout(context.Background(), delay*2)
 		go func(){
@@ -157,14 +165,16 @@ func TestMockTransportCloseCTX(t *testing.T){
 		io.ReadFull(res.Conn, make([]byte, 6+ed25519.PublicKeySize)) // 6 is header size
 		ri := make(chan string)
 		go func(){
-			ri <- readMockTransportInfo(res.Conn)
+			ri <- ReadMockTransportInfo(res.Conn)
 		}()
 		time.Sleep(delay*2) // Wait for all info writed to conn
 		res.Conn.Close() // Close conn
 		recvInfo := <- ri
-		correctInfo := formatMockTransportInfo(transport.Scheme, *uri, nil, closectx)
+		correctInfo := FormatMockTransportInfo(transport.Scheme, *uri, nil, closectx, pkey)
 		if recvInfo != correctInfo {
 			t.Errorf("Wrong transport info '%s' '%s'", correctInfo, recvInfo)
 		}
 	}
 }
+
+

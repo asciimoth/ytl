@@ -30,23 +30,45 @@ import(
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
 
-func formatMockTransportInfo(scheme string, uri url.URL, proxy *url.URL, ctx_closed bool)string {
-	txtProxy := ""
+func FormatMockTransportInfo(
+	scheme string,
+	uri url.URL,
+	proxy *url.URL,
+	ctx_closed bool,
+	key ed25519.PrivateKey,
+)string {
+	txtProxy := "nil"
 	if proxy != nil {
 		txtProxy = uri.String()
 	}
+	txtKey := "nil"
+	if key != nil {
+		txtKey = hex.EncodeToString(key)
+	}
 	return fmt.Sprintf(
-		"{'transport name': '%s', 'uri': '%s', 'proxy': '%s', 'ctx closed': '%t'}",
-		scheme, uri.String(), txtProxy, ctx_closed,
+		"{'transport name':'%s','uri':'%s','proxy':'%s','ctx closed':'%t','PrivKey':'%s'}",
+		scheme, uri.String(), txtProxy, ctx_closed, txtKey,
 	)
 }
 
-func readMockTransportInfo(conn net.Conn) string {
+func ReadMockTransportInfo(conn net.Conn) string {
 	b, err := io.ReadAll(conn)
 	if err == nil {
 		return ""
 	}
 	return string(b)
+}
+
+func ReadMockTransportInfoAfterHeader(conn net.Conn) string {
+	io.ReadFull(conn, make([]byte, 6+ed25519.PublicKeySize)) // 6 is header size
+	res := make(chan string)
+	go func(){
+		res <- ReadMockTransportInfo(conn)
+	}()
+	time.Sleep(500000000)
+	conn.Close()
+	result := <- res
+	return result
 }
 
 func getPubKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
@@ -145,7 +167,7 @@ func (t MockTransport) Connect(
 		input.Write(header)
 		input.Write(opponent_key)
 		time.Sleep(delay_after_meta)
-		input.Write([]byte(formatMockTransportInfo(t.Scheme, uri, proxy, ctx_closed)))
+		input.Write([]byte(FormatMockTransportInfo(t.Scheme, uri, proxy, ctx_closed, key)))
 		buf := make([]byte, 1)
 		for {
 			_, err := input.Read(buf)

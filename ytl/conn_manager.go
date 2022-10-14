@@ -132,21 +132,28 @@ func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggC
 		Conn *YggConn
 		Error error
 	}
-    result := make(chan Result, 1)
+    result := make(chan Result)
     ctx, cancel := context.WithTimeout(c.ctx, timeout)
     go func() {
     	conn, err := c.ConnectCtx(ctx, uri)
         result <- Result{conn, err}
     }()
+    cancel_conn := func(){
+ 	   	cancel()
+ 		go func() {
+ 			result := <-result
+ 			if result.Error == nil && result.Conn != nil{
+ 				result.Conn.Close()
+ 			}
+ 		}()
+    }
     select {
-    	case <-time.After(timeout):
+    	case <- ctx.Done():
+    		cancel_conn()
+        	return nil, static.ConnTimeoutError{}
+    	case <- c.ctx.Done():
     		cancel()
-    		go func() {
-    			result := <-result
-    			if result.Error == nil && result.Conn != nil{
-    				result.Conn.Close()
-    			}
-    		}()
+    		cancel_conn()
         	return nil, static.ConnTimeoutError{}
     	case result := <-result:
     		cancel()
