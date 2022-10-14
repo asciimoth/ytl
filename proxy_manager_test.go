@@ -20,11 +20,11 @@ package ytl
 
 import (
 	"net/url"
-	"testing"
 	"regexp"
+	"testing"
 )
 
-func TestProxyManager(t *testing.T){
+func TestProxyManager(t *testing.T) {
 	torProxy, _ := url.Parse("proxy://tor")
 	i2pProxy, _ := url.Parse("proxy://i2p")
 	//
@@ -33,13 +33,13 @@ func TestProxyManager(t *testing.T){
 	i2pUri, _ := url.Parse("tcp://exaple.i2p")
 	//
 	mapping := []ProxyMapping{
-		ProxyMapping{
+		{
 			HostRegexp: *regexp.MustCompile(`\.onion$`),
-			Proxy: torProxy,
+			Proxy:      torProxy,
 		},
-		ProxyMapping{
+		{
 			HostRegexp: *regexp.MustCompile(`\.i2p$`),
-			Proxy: i2pProxy,
+			Proxy:      i2pProxy,
 		},
 	}
 	manager := NewProxyManager(nil, mapping)

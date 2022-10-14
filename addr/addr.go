@@ -19,9 +19,9 @@
 package addr
 
 import (
-	"net"
 	"github.com/DomesticMoth/ytl/static"
 	"github.com/yggdrasil-network/yggdrasil-go/src/address"
+	"net"
 )
 
 func CheckAddr(ip net.IP) error {

@@ -18,13 +18,13 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 package transports
 
-import(
-	"net"
-	"net/url"
+import (
 	"context"
 	"crypto/ed25519"
-	"github.com/DomesticMoth/ytl/static"
 	"github.com/DomesticMoth/ytl/dialers"
+	"github.com/DomesticMoth/ytl/static"
+	"net"
+	"net/url"
 )
 
 const TcpScheme = "tcp"
@@ -32,15 +32,15 @@ const TcpScheme = "tcp"
 type TcpTransport struct{}
 
 func (t TcpTransport) GetScheme() string {
-    return TcpScheme
+	return TcpScheme
 }
 
 func (t TcpTransport) Connect(ctx context.Context, uri url.URL, proxy *url.URL, key ed25519.PrivateKey) (static.ConnResult, error) {
 	dialer := dialers.TcpDialer{}
 	conn, err := dialer.DialContext(ctx, uri, proxy)
 	return static.ConnResult{
-		Conn: conn,
-		Pkey: nil,
+		Conn:          conn,
+		Pkey:          nil,
 		SecurityLevel: static.SECURE_LVL_UNSECURE,
 	}, err
 }

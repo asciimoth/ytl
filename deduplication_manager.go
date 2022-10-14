@@ -20,8 +20,8 @@ package ytl
 
 import (
 	"bytes"
-	"encoding/hex"
 	"crypto/ed25519"
+	"encoding/hex"
 )
 
 func ketToStr(key ed25519.PublicKey) string {
@@ -30,16 +30,16 @@ func ketToStr(key ed25519.PublicKey) string {
 
 type connInfo struct {
 	closeMethod func()
-	isSecure uint
-	connId uint64
+	isSecure    uint
+	connId      uint64
 }
 
 type DeduplicationManager struct {
-	lockChan chan struct{}
+	lockChan    chan struct{}
 	connections map[string]connInfo
-	connId uint64
-	secureMode bool
-	blockKey ed25519.PublicKey
+	connId      uint64
+	secureMode  bool
+	blockKey    ed25519.PublicKey
 }
 
 func NewDeduplicationManager(secureMode bool, blockKey ed25519.PublicKey) *DeduplicationManager {
@@ -49,7 +49,7 @@ func NewDeduplicationManager(secureMode bool, blockKey ed25519.PublicKey) *Dedup
 }
 
 func (d *DeduplicationManager) lock() {
-	<- d.lockChan
+	<-d.lockChan
 }
 
 func (d *DeduplicationManager) unlock() {
@@ -62,7 +62,7 @@ func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 	if value, ok := d.connections[strKey]; ok {
 		if value.connId == connId {
 			closeMethod := value.closeMethod
-			delete(d.connections, strKey);
+			delete(d.connections, strKey)
 			if closeMethod != nil {
 				closeMethod()
 			}
@@ -70,13 +70,17 @@ func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 	}
 }
 
-func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure uint, closeMethod func()) func(){
+func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure uint, closeMethod func()) func() {
 	d.lock()
 	defer d.unlock()
-	if d.blockKey != nil && bytes.Compare(d.blockKey, key) == 0{ return nil }
+	if d.blockKey != nil && bytes.Compare(d.blockKey, key) == 0 {
+		return nil
+	}
 	strKey := ketToStr(key)
 	if value, ok := d.connections[strKey]; ok {
-		if !d.secureMode { return nil }
+		if !d.secureMode {
+			return nil
+		}
 		if isSecure > value.isSecure {
 			if value.closeMethod != nil {
 				value.closeMethod()
@@ -89,7 +93,7 @@ func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure uint, close
 				isSecure,
 				connId,
 			}
-			return func(){
+			return func() {
 				d.onClose(strKey, connId)
 			}
 		}
@@ -102,7 +106,7 @@ func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure uint, close
 		isSecure,
 		connId,
 	}
-	return func(){
+	return func() {
 		d.onClose(strKey, connId)
 	}
 }

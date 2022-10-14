@@ -19,40 +19,40 @@
 package ytl
 
 import (
+	"bytes"
+	"crypto/ed25519"
+	"encoding/hex"
+	"github.com/DomesticMoth/ytl/debugstuff"
+	"github.com/DomesticMoth/ytl/static"
 	"io"
 	"net"
-	"bytes"
-	"time"
 	"testing"
-	"encoding/hex"
-	"crypto/ed25519"
-	"github.com/DomesticMoth/ytl/static"
-	"github.com/DomesticMoth/ytl/debugstuff"
+	"time"
 )
 
 type CaseTestParceMetaPackage struct {
-	conn net.Conn
-	err error
+	conn    net.Conn
+	err     error
 	version *static.ProtoVersion
-	pkey ed25519.PublicKey
-	buf []byte
+	pkey    ed25519.PublicKey
+	buf     []byte
 }
 
-func TestParceMetaPackage(t *testing.T){
+func TestParceMetaPackage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping TestParceMetaPackage in short mode.")
 	}
 	v := static.PROTO_VERSION()
 	v2 := static.ProtoVersion{Major: 1, Minor: 5}
 	cases := []CaseTestParceMetaPackage{
-		CaseTestParceMetaPackage{
+		{
 			debugstuff.MockConn(),
 			nil,
 			&v,
 			debugstuff.MockPubKey(),
 			debugstuff.MockConnContent()[:38],
 		},
-		CaseTestParceMetaPackage{
+		{
 			debugstuff.MockWrongVerConn(),
 			static.UnknownProtoVersionError{
 				Expected: static.PROTO_VERSION(),
@@ -62,47 +62,49 @@ func TestParceMetaPackage(t *testing.T){
 			nil,
 			debugstuff.MockConnWrongVerContent()[:38],
 		},
-		CaseTestParceMetaPackage{
+		{
 			debugstuff.MockTooShortConn(),
 			static.ConnTimeoutError{},
 			nil,
 			nil,
 			nil,
 		},
-	};
+	}
 	for _, cse := range cases {
 		err, version, pkey, buf := parceMetaPackage(cse.conn, time.Minute/2)
 		if err != cse.err {
-			t.Fatalf("Wrong err %s %s", err, cse.err);
+			t.Fatalf("Wrong err %s %s", err, cse.err)
 		}
 		if version != nil && cse.version != nil {
 			if version.Major != cse.version.Major || version.Minor != cse.version.Minor {
-				t.Fatalf("Wrong verison %s %s", version, cse.version);
+				t.Fatalf("Wrong verison %s %s", version, cse.version)
 			}
 		} else if version != cse.version {
-			t.Fatalf("Wrong verison %s %s", version, cse.version);
+			t.Fatalf("Wrong verison %s %s", version, cse.version)
 		}
 		if bytes.Compare(pkey, cse.pkey) != 0 {
 			t.Fatalf(
-				"Wrong PublicKey %s %s", 
+				"Wrong PublicKey %s %s",
 				hex.EncodeToString(pkey),
 				hex.EncodeToString(cse.pkey),
-			);
+			)
 		}
 		if bytes.Compare(buf, cse.buf) != 0 {
 			t.Fatalf(
 				"Wrong buf %s %s",
 				hex.EncodeToString(buf),
 				hex.EncodeToString(cse.buf),
-			);
+			)
 		}
 	}
 }
 
-func TestYggConnCorrectReading(t *testing.T){
+func TestYggConnCorrectReading(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		strictMode := false
-		if i > 0 { strictMode = true }
+		if i > 0 {
+			strictMode = true
+		}
 		for secure := 0; secure < 2; secure++ {
 			data := debugstuff.MockConnContent()
 			a := debugstuff.MockConn()
@@ -129,7 +131,7 @@ func TestYggConnCorrectReading(t *testing.T){
 			version, err := yggcon.GetVer()
 			if err != nil {
 				t.Errorf("Error while reading verdion %s", err)
-			}else{
+			} else {
 				if version.Major != target_version.Major || version.Minor != target_version.Minor {
 					t.Errorf("Invalid version")
 				}
@@ -137,7 +139,7 @@ func TestYggConnCorrectReading(t *testing.T){
 			key, err := yggcon.GetPublicKey()
 			if err != nil {
 				t.Errorf("Error while reading public key %s", err)
-			}else{
+			} else {
 				if bytes.Compare(key, debugstuff.MockPubKey()) != 0 {
 					t.Errorf("Invalid key")
 				}
@@ -147,10 +149,10 @@ func TestYggConnCorrectReading(t *testing.T){
 }
 
 func yggConnTestCollision(
-		t *testing.T, 
-		n1, n2 uint, // secure params for connections
-		n int, // The number of the connection to be CLOSED
-	) {
+	t *testing.T,
+	n1, n2 uint, // secure params for connections
+	n int, // The number of the connection to be CLOSED
+) {
 	dm := NewDeduplicationManager(true, nil)
 	if n == 0 {
 		dm = nil
@@ -186,7 +188,7 @@ func yggConnTestCollision(
 	if n == 1 {
 		_, err1 = io.ReadFull(yggcon2, buf)
 		_, err2 = io.ReadFull(yggcon1, buf)
-	}else{
+	} else {
 		_, err1 = io.ReadFull(yggcon1, buf)
 		_, err2 = io.ReadFull(yggcon2, buf)
 	}
@@ -197,10 +199,10 @@ func yggConnTestCollision(
 		t.Fatalf("Connection was not closed")
 	}
 	switch err2.(type) {
-		case static.ConnClosedByDeduplicatorError:
-		    // Ok
-		default:
-		    t.Fatalf("Connection was not closed by deduplicator: %s", err2)
+	case static.ConnClosedByDeduplicatorError:
+		// Ok
+	default:
+		t.Fatalf("Connection was not closed by deduplicator: %s", err2)
 	}
 }
 
@@ -210,30 +212,30 @@ func yggConnTestCollision(
 	yggConnTestCollision(t, false, false, 2)
 }*/
 
-func TestYggConnCollisionIS(t *testing.T){
+func TestYggConnCollisionIS(t *testing.T) {
 	yggConnTestCollision(t, 0, 1, 1)
 }
 
-func TestYggConnCollisionSI(t *testing.T){
+func TestYggConnCollisionSI(t *testing.T) {
 	yggConnTestCollision(t, 1, 0, 2)
 }
 
-func TestYggConnCollisionSS(t *testing.T){
+func TestYggConnCollisionSS(t *testing.T) {
 	yggConnTestCollision(t, 1, 0, 2)
 }
 
-func TestYggConnNoCollisionII(t *testing.T){
+func TestYggConnNoCollisionII(t *testing.T) {
 	yggConnTestCollision(t, 0, 0, 0)
 }
 
-func TestYggConnNoCollisionIS(t *testing.T){
+func TestYggConnNoCollisionIS(t *testing.T) {
 	yggConnTestCollision(t, 0, 1, 0)
 }
 
-func TestYggConnNoCollisionSI(t *testing.T){
+func TestYggConnNoCollisionSI(t *testing.T) {
 	yggConnTestCollision(t, 1, 0, 0)
 }
 
-func TestYggConnNoCollisionSS(t *testing.T){
+func TestYggConnNoCollisionSS(t *testing.T) {
 	yggConnTestCollision(t, 1, 0, 0)
 }

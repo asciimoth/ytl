@@ -18,16 +18,16 @@
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 package debugstuff
 
-import(
-	"io"
-	"fmt"
-	"net"
-	"time"
-	"net/url"
+import (
 	"context"
-	"encoding/hex"
 	"crypto/ed25519"
+	"encoding/hex"
+	"fmt"
 	"github.com/DomesticMoth/ytl/static"
+	"io"
+	"net"
+	"net/url"
+	"time"
 )
 
 func FormatMockTransportInfo(
@@ -36,7 +36,7 @@ func FormatMockTransportInfo(
 	proxy *url.URL,
 	ctx_closed bool,
 	key ed25519.PrivateKey,
-)string {
+) string {
 	txtProxy := "nil"
 	if proxy != nil {
 		txtProxy = uri.String()
@@ -62,12 +62,12 @@ func ReadMockTransportInfo(conn net.Conn) string {
 func ReadMockTransportInfoAfterHeader(conn net.Conn) string {
 	io.ReadFull(conn, make([]byte, 6+ed25519.PublicKeySize)) // 6 is header size
 	res := make(chan string)
-	go func(){
+	go func() {
 		res <- ReadMockTransportInfo(conn)
 	}()
 	time.Sleep(500000000)
 	conn.Close()
-	result := <- res
+	result := <-res
 	return result
 }
 
@@ -107,7 +107,7 @@ func getDurationFromUri(uri url.URL, key string) time.Duration {
 
 type MockTransportListener struct {
 	transport static.Transport
-	uri url.URL
+	uri       url.URL
 }
 
 func (l *MockTransportListener) Accept() (net.Conn, error) {
@@ -128,21 +128,21 @@ func (l *MockTransportListener) Addr() net.Addr {
 	return nil
 }
 
-type MockTransport struct{
-	Scheme string
+type MockTransport struct {
+	Scheme    string
 	SecureLvl uint
 }
 
 func (t MockTransport) GetScheme() string {
-    return t.Scheme
+	return t.Scheme
 }
 
 func (t MockTransport) Connect(
-		ctx context.Context,
-		uri url.URL,
-		proxy *url.URL,
-		key ed25519.PrivateKey,
-	) (static.ConnResult, error) {
+	ctx context.Context,
+	uri url.URL,
+	proxy *url.URL,
+	key ed25519.PrivateKey,
+) (static.ConnResult, error) {
 	opponent_key := getPubKeyFromUri(uri, "mock_peer_key")
 	transport_key := getTransportKeyFromUri(uri, "mock_transport_key")
 	delay_conn := getDurationFromUri(uri, "mock_delay_conn")
@@ -156,13 +156,13 @@ func (t MockTransport) Connect(
 	}
 	wait := time.After(delay_conn)
 	select {
-		case <- wait:
-			// Do nothing
-		case <- ctx.Done():
-			ctx_closed = true
-			<- wait
+	case <-wait:
+		// Do nothing
+	case <-ctx.Done():
+		ctx_closed = true
+		<-wait
 	}
-	go func(){
+	go func() {
 		time.Sleep(delay_before_meta)
 		input.Write(header)
 		input.Write(opponent_key)
@@ -171,13 +171,15 @@ func (t MockTransport) Connect(
 		buf := make([]byte, 1)
 		for {
 			_, err := input.Read(buf)
-			if err != nil { break }
+			if err != nil {
+				break
+			}
 		}
 		input.Close()
-	}()	
+	}()
 	return static.ConnResult{
-		Conn: output,
-		Pkey: transport_key,
+		Conn:          output,
+		Pkey:          transport_key,
 		SecurityLevel: t.SecureLvl,
 	}, nil
 }

@@ -19,18 +19,18 @@
 package debugstuff
 
 import (
-	"io"
-	"fmt"
-	"time"
-	"encoding/hex"
 	"bytes"
-	"net/url"
 	"context"
-	"testing"
 	"crypto/ed25519"
+	"encoding/hex"
+	"fmt"
+	"io"
+	"net/url"
+	"testing"
+	"time"
 )
 
-func TestGetDurationFromUri(t *testing.T){
+func TestGetDurationFromUri(t *testing.T) {
 	textDelay := "2s"
 	key := "mock_delay_conn"
 	delay, _ := time.ParseDuration(textDelay)
@@ -41,7 +41,7 @@ func TestGetDurationFromUri(t *testing.T){
 	}
 }
 
-func TestMockTransportPeerKey(t *testing.T){
+func TestMockTransportPeerKey(t *testing.T) {
 	transport := MockTransport{"scheme", 0}
 	peerKey := MockPubKey()
 	uri, _ := url.Parse(
@@ -62,14 +62,14 @@ func TestMockTransportPeerKey(t *testing.T){
 	io.ReadFull(res.Conn, peerKeyRecv)
 	if bytes.Compare(peerKey, peerKeyRecv) != 0 {
 		t.Fatalf(
-			"Wrong peer public key %s %s", 
+			"Wrong peer public key %s %s",
 			hex.EncodeToString(peerKey),
 			hex.EncodeToString(peerKeyRecv),
-		);
+		)
 	}
 }
 
-func TestMockTransportTransportKey(t *testing.T){
+func TestMockTransportTransportKey(t *testing.T) {
 	transport := MockTransport{"scheme", 0}
 	transportKey := MockPubKey()
 	uri, _ := url.Parse(
@@ -89,14 +89,14 @@ func TestMockTransportTransportKey(t *testing.T){
 	}
 	if bytes.Compare(transportKey, res.Pkey) != 0 {
 		t.Fatalf(
-			"Wrong transport public key %s %s", 
+			"Wrong transport public key %s %s",
 			hex.EncodeToString(transportKey),
 			hex.EncodeToString(res.Pkey),
-		);
+		)
 	}
 }
 
-func TestMockTransportInfo(t *testing.T){
+func TestMockTransportInfo(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping TestMockTransportInfo in short mode.")
 	}
@@ -117,12 +117,12 @@ func TestMockTransportInfo(t *testing.T){
 		}
 		io.ReadFull(res.Conn, make([]byte, 6+ed25519.PublicKeySize)) // 6 is header size
 		ri := make(chan string)
-		go func(){
+		go func() {
 			ri <- ReadMockTransportInfo(res.Conn)
 		}()
 		time.Sleep(1000000000) // Wait for all info writed to conn
-		res.Conn.Close() // Close conn
-		recvInfo := <- ri
+		res.Conn.Close()       // Close conn
+		recvInfo := <-ri
 		correctInfo := FormatMockTransportInfo(
 			transport.Scheme,
 			*uri,
@@ -136,7 +136,7 @@ func TestMockTransportInfo(t *testing.T){
 	}
 }
 
-func TestMockTransportCloseCTX(t *testing.T){
+func TestMockTransportCloseCTX(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping TestMockTransportCloseCTX in short mode.")
 	}
@@ -146,11 +146,11 @@ func TestMockTransportCloseCTX(t *testing.T){
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	for _, closectx := range []bool{false, true} {
 		ctx, cancel := context.WithTimeout(context.Background(), delay*2)
-		go func(){
-			time.Sleep(delay/2)
+		go func() {
+			time.Sleep(delay / 2)
 			if closectx {
 				cancel()
-				<- ctx.Done()
+				<-ctx.Done()
 			}
 		}()
 		res, e := transport.Connect(
@@ -164,17 +164,15 @@ func TestMockTransportCloseCTX(t *testing.T){
 		}
 		io.ReadFull(res.Conn, make([]byte, 6+ed25519.PublicKeySize)) // 6 is header size
 		ri := make(chan string)
-		go func(){
+		go func() {
 			ri <- ReadMockTransportInfo(res.Conn)
 		}()
-		time.Sleep(delay*2) // Wait for all info writed to conn
-		res.Conn.Close() // Close conn
-		recvInfo := <- ri
+		time.Sleep(delay * 2) // Wait for all info writed to conn
+		res.Conn.Close()      // Close conn
+		recvInfo := <-ri
 		correctInfo := FormatMockTransportInfo(transport.Scheme, *uri, nil, closectx, pkey)
 		if recvInfo != correctInfo {
 			t.Errorf("Wrong transport info '%s' '%s'", correctInfo, recvInfo)
 		}
 	}
 }
-
-

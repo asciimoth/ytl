@@ -19,23 +19,23 @@
 package debugstuff
 
 import (
-	"testing"
 	"bytes"
 	"github.com/DomesticMoth/ytl/static"
+	"testing"
 )
 
-func TestMockPubKeyGeneration(t *testing.T){
+func TestMockPubKeyGeneration(t *testing.T) {
 	key := MockPubKey()
 	correct := []byte{
-		194, 220, 146,  21, 237, 163, 168,  31,
-		216,  91, 173,   6,  46, 225, 161, 231,
-		146, 238,  83, 130, 131,  95, 151, 141,
-		143,  73, 142,  61,  27, 142, 160, 212,
+		194, 220, 146, 21, 237, 163, 168, 31,
+		216, 91, 173, 6, 46, 225, 161, 231,
+		146, 238, 83, 130, 131, 95, 151, 141,
+		143, 73, 142, 61, 27, 142, 160, 212,
 	}
 	if bytes.Compare(key, correct) != 0 {
 		t.Fatalf("Wrong mock PubKey %s", static.TransportSecurityCheckError{
-						Expected: correct,
-						Received: key,
-					})
+			Expected: correct,
+			Received: key,
+		})
 	}
 }

@@ -19,19 +19,19 @@
 package dialers
 
 import (
+	"context"
+	"github.com/DomesticMoth/ytl/addr"
+	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
-	"time"
 	"syscall"
-	"context"
-	"golang.org/x/net/proxy"
-	"github.com/DomesticMoth/ytl/addr"
+	"time"
 )
 
 type TcpDialer struct {
-	Timeout time.Duration `default:"2m"`
+	Timeout   time.Duration `default:"2m"`
 	KeepAlive time.Duration `default:"15s"`
-	Control func(network, address string, c syscall.RawConn) error
+	Control   func(network, address string, c syscall.RawConn) error
 }
 
 func (d *TcpDialer) Dial(uri url.URL, proxy *url.URL) (net.Conn, error) {
@@ -45,19 +45,27 @@ func (d *TcpDialer) DialContext(ctx context.Context, uri url.URL, proxy_uri *url
 	}
 	if use_proxy {
 		dialerdst, err := net.ResolveTCPAddr("tcp", proxy_uri.Host)
-		if err != nil { return nil, err }
-		if err = addr.CheckAddr(dialerdst.IP); err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
+		if err = addr.CheckAddr(dialerdst.IP); err != nil {
+			return nil, err
+		}
 		auth := &proxy.Auth{}
 		if proxy_uri.User != nil {
 			auth.User = proxy_uri.User.Username()
 			auth.Password, _ = proxy_uri.User.Password()
 		}
 		innerDialer, err := proxy.SOCKS5("tcp", dialerdst.String(), auth, proxy.Direct)
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		ctx, cancel := context.WithTimeout(ctx, d.Timeout)
 		conn, err := innerDialer.(proxy.ContextDialer).DialContext(ctx, "tcp", uri.Host)
 		cancel()
-		if err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
 		laddr, _, _ := net.SplitHostPort(conn.LocalAddr().String())
 		raddr, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 		if err = addr.CheckAddr(net.ParseIP(laddr)); err != nil {
@@ -69,14 +77,18 @@ func (d *TcpDialer) DialContext(ctx context.Context, uri url.URL, proxy_uri *url
 			return nil, err
 		}
 		return conn, err
-	}else{
+	} else {
 		dst, err := net.ResolveTCPAddr("tcp", uri.Host)
-		if err != nil { return nil, err }
-		if err = addr.CheckAddr(dst.IP); err != nil { return nil, err }
+		if err != nil {
+			return nil, err
+		}
+		if err = addr.CheckAddr(dst.IP); err != nil {
+			return nil, err
+		}
 		innerDialer := net.Dialer{
-			Timeout: d.Timeout,
+			Timeout:   d.Timeout,
 			KeepAlive: d.KeepAlive,
-			Control: d.Control,
+			Control:   d.Control,
 		}
 		ctx, cancel := context.WithTimeout(ctx, d.Timeout)
 		conn, err := innerDialer.DialContext(ctx, "tcp", dst.String())

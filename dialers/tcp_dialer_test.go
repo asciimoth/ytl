@@ -19,16 +19,16 @@
 package dialers
 
 import (
+	"github.com/DomesticMoth/ytl/static"
+	"github.com/foxcpp/go-mockdns"
 	"net"
 	"net/url"
 	"testing"
-	"github.com/foxcpp/go-mockdns"
-	"github.com/DomesticMoth/ytl/static"
 )
 
 func testTcpDialerLoopRoutingProtection(
 	t *testing.T, addr url.URL, proxy *url.URL, isYggOverYgg bool,
-	){
+) {
 	correct_error_text := static.UnacceptableAddressError{
 		Text: "ygg over ygg routing",
 	}.Error()
@@ -37,10 +37,10 @@ func testTcpDialerLoopRoutingProtection(
 	if isYggOverYgg {
 		if err == nil {
 			t.Errorf("Try ygg over ygg routing must retrun error")
-		}else if err.Error() != correct_error_text {
+		} else if err.Error() != correct_error_text {
 			t.Errorf("Wrong error %s", err)
 		}
-	}else{
+	} else {
 		if err != nil {
 			if err.Error() == correct_error_text {
 				t.Errorf("Unexcepted ygg over ygg routing error")
@@ -49,14 +49,14 @@ func testTcpDialerLoopRoutingProtection(
 	}
 }
 
-func TestTcpDialerLoopRoutingProtectionWithDns(t *testing.T){
+func TestTcpDialerLoopRoutingProtectionWithDns(t *testing.T) {
 	srv, _ := mockdns.NewServer(map[string]mockdns.Zone{
-	    "ygg.org.": {
-	        AAAA: []string{"202:a029:6fa0:f079:7fc:646f:cd3b:6248"},
-	    },
-	    "localhost.": {
-	        AAAA: []string{"::1"},
-	    },
+		"ygg.org.": {
+			AAAA: []string{"202:a029:6fa0:f079:7fc:646f:cd3b:6248"},
+		},
+		"localhost.": {
+			AAAA: []string{"::1"},
+		},
 	}, false)
 	defer srv.Close()
 	srv.PatchNet(net.DefaultResolver)

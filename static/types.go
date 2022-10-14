@@ -19,12 +19,12 @@
 package static
 
 import (
-	"net"
-	"fmt"
-	"net/url"
 	"context"
-	"crypto/subtle"
 	"crypto/ed25519"
+	"crypto/subtle"
+	"fmt"
+	"net"
+	"net/url"
 )
 
 type ProtoVersion struct {
@@ -39,17 +39,23 @@ func (e ProtoVersion) String() string {
 type AllowList []ed25519.PublicKey
 
 func (a *AllowList) IsAllow(key ed25519.PublicKey) bool {
-	if a == nil { return true }
-	if key == nil{ return false }
+	if a == nil {
+		return true
+	}
+	if key == nil {
+		return false
+	}
 	for _, value := range *a {
-		if subtle.ConstantTimeCompare(value, key) == 1 { return true }
+		if subtle.ConstantTimeCompare(value, key) == 1 {
+			return true
+		}
 	}
 	return false
 }
 
 type ConnResult struct {
-	Conn net.Conn
-	Pkey ed25519.PublicKey
+	Conn          net.Conn
+	Pkey          ed25519.PublicKey
 	SecurityLevel uint
 }
 
@@ -69,7 +75,7 @@ type TransportListener interface {
 }
 
 type baseTransportListener struct {
-	inner net.Listener
+	inner         net.Listener
 	securityLevel uint
 }
 

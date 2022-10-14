@@ -19,15 +19,15 @@
 package static
 
 const (
-	SECURE_LVL_UNSECURE uint = 0
-	SECURE_LVL_ENCRYPTED = 1
-	SECURE_LVL_VERIFIED = 2
-	SECURE_LVL_ENCRYPTED_AND_VERIFIED = 3
+	SECURE_LVL_UNSECURE               uint = 0
+	SECURE_LVL_ENCRYPTED                   = 1
+	SECURE_LVL_VERIFIED                    = 2
+	SECURE_LVL_ENCRYPTED_AND_VERIFIED      = 3
 )
 
 // Because there are no constants structures in go
 func PROTO_VERSION() ProtoVersion {
-	return ProtoVersion{0,4}
+	return ProtoVersion{0, 4}
 }
 
 func META_HEADER() []byte {

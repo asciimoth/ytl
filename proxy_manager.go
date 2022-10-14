@@ -19,28 +19,28 @@
 package ytl
 
 import (
-	"regexp"
 	"net/url"
+	"regexp"
 )
 
 type ProxyMapping struct {
 	HostRegexp regexp.Regexp
-	Proxy *url.URL
+	Proxy      *url.URL
 }
 
 type ProxyManager struct {
 	defaultProxy *url.URL
-	mapping []ProxyMapping
+	mapping      []ProxyMapping
 }
 
-func NewProxyManager(defaultProxy *url.URL, mapping []ProxyMapping) ProxyManager{
+func NewProxyManager(defaultProxy *url.URL, mapping []ProxyMapping) ProxyManager {
 	if mapping == nil {
 		mapping = make([]ProxyMapping, 0)
 	}
 	return ProxyManager{defaultProxy, mapping}
 }
 
-func (p * ProxyManager) Get(uri url.URL) *url.URL {
+func (p *ProxyManager) Get(uri url.URL) *url.URL {
 	for _, mapping := range p.mapping {
 		if mapping.HostRegexp.MatchString(uri.Host) {
 			return mapping.Proxy

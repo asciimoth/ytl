@@ -19,13 +19,13 @@
 package ytl
 
 import (
+	"context"
+	"crypto/ed25519"
+	"encoding/hex"
+	"github.com/DomesticMoth/ytl/static"
+	"github.com/DomesticMoth/ytl/transports"
 	"net/url"
 	"time"
-	"context"
-	"encoding/hex"
-	"crypto/ed25519"
-	"github.com/DomesticMoth/ytl/transports"
-	"github.com/DomesticMoth/ytl/static"
 )
 
 func KeyFromOptionalKey(key ed25519.PrivateKey) ed25519.PrivateKey {
@@ -33,35 +33,37 @@ func KeyFromOptionalKey(key ed25519.PrivateKey) ed25519.PrivateKey {
 		return key
 	}
 	_, spriv, err := ed25519.GenerateKey(nil)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	return spriv
 }
 
-func transportsListToMap(list []static.Transport) map[string]static.Transport{
+func transportsListToMap(list []static.Transport) map[string]static.Transport {
 	transports_map := make(map[string]static.Transport)
-	for _, transport := range list{
+	for _, transport := range list {
 		transports_map[transport.GetScheme()] = transport
 	}
 	return transports_map
 }
 
-type ConnManager struct{
-	transports map[string]static.Transport
-	key ed25519.PrivateKey
+type ConnManager struct {
+	transports   map[string]static.Transport
+	key          ed25519.PrivateKey
 	proxyManager ProxyManager
-	allowList *static.AllowList
-	ctx context.Context
-	dm *DeduplicationManager
+	allowList    *static.AllowList
+	ctx          context.Context
+	dm           *DeduplicationManager
 }
 
 func NewConnManagerWithTransports(
-		ctx context.Context, 
-		key ed25519.PrivateKey, 
-		proxy *ProxyManager, 
-		dm *DeduplicationManager, 
-		allowList *static.AllowList,
-		transports []static.Transport,
-	) *ConnManager{
+	ctx context.Context,
+	key ed25519.PrivateKey,
+	proxy *ProxyManager,
+	dm *DeduplicationManager,
+	allowList *static.AllowList,
+	transports []static.Transport,
+) *ConnManager {
 	transports_map := transportsListToMap(transports)
 	if proxy == nil {
 		p := NewProxyManager(nil, nil)
@@ -71,12 +73,12 @@ func NewConnManagerWithTransports(
 }
 
 func NewConnManager(
-		ctx context.Context, 
-		key ed25519.PrivateKey, 
-		proxy *ProxyManager, 
-		dm *DeduplicationManager, 
-		allowList *static.AllowList,
-	) *ConnManager{
+	ctx context.Context,
+	key ed25519.PrivateKey,
+	proxy *ProxyManager,
+	dm *DeduplicationManager,
+	allowList *static.AllowList,
+) *ConnManager {
 	return NewConnManagerWithTransports(
 		ctx,
 		key,
@@ -87,7 +89,7 @@ func NewConnManager(
 	)
 }
 
-func (c * ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, error) {
+func (c *ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, error) {
 	var allowList *static.AllowList = nil
 	if c.allowList != nil {
 		allow := make(static.AllowList, len(*c.allowList))
@@ -111,7 +113,7 @@ func (c * ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, e
 			KeyFromOptionalKey(c.key),
 		)
 		if allowList != nil {
-			if !allowList.IsAllow(conn.Pkey) || conn.Pkey == nil{
+			if !allowList.IsAllow(conn.Pkey) || conn.Pkey == nil {
 				conn.Conn.Close()
 				return nil, static.IvalidPeerPublicKey{
 					Text: "Key received from the peer is not in the allow list",
@@ -123,49 +125,51 @@ func (c * ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, e
 	return nil, static.UnknownSchemeError{Scheme: uri.Scheme}
 }
 
-func (c * ConnManager) Connect(uri url.URL) (*YggConn, error) {
+func (c *ConnManager) Connect(uri url.URL) (*YggConn, error) {
 	return c.ConnectCtx(c.ctx, uri)
 }
 
-func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggConn, error) {
-	type Result struct{
-		Conn *YggConn
+func (c *ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggConn, error) {
+	type Result struct {
+		Conn  *YggConn
 		Error error
 	}
-    result := make(chan Result)
-    ctx, cancel := context.WithTimeout(c.ctx, timeout)
-    go func() {
-    	conn, err := c.ConnectCtx(ctx, uri)
-        result <- Result{conn, err}
-    }()
-    cancel_conn := func(){
- 	   	cancel()
- 		go func() {
- 			result := <-result
- 			if result.Error == nil && result.Conn != nil{
- 				result.Conn.Close()
- 			}
- 		}()
-    }
-    select {
-    	case <- ctx.Done():
-    		cancel_conn()
-        	return nil, static.ConnTimeoutError{}
-    	case <- c.ctx.Done():
-    		cancel()
-    		cancel_conn()
-        	return nil, static.ConnTimeoutError{}
-    	case result := <-result:
-    		cancel()
-        	return result.Conn, result.Error
-    }
+	result := make(chan Result)
+	ctx, cancel := context.WithTimeout(c.ctx, timeout)
+	go func() {
+		conn, err := c.ConnectCtx(ctx, uri)
+		result <- Result{conn, err}
+	}()
+	cancel_conn := func() {
+		cancel()
+		go func() {
+			result := <-result
+			if result.Error == nil && result.Conn != nil {
+				result.Conn.Close()
+			}
+		}()
+	}
+	select {
+	case <-ctx.Done():
+		cancel_conn()
+		return nil, static.ConnTimeoutError{}
+	case <-c.ctx.Done():
+		cancel()
+		cancel_conn()
+		return nil, static.ConnTimeoutError{}
+	case result := <-result:
+		cancel()
+		return result.Conn, result.Error
+	}
 }
 
-func (c * ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
+func (c *ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
 	if transport, ok := c.transports[uri.Scheme]; ok {
 		listener, e := transport.Listen(c.ctx, uri, c.key)
 		err = e
-		if err != nil { return }
+		if err != nil {
+			return
+		}
 		ygg = YggListener{listener, c.dm, c.allowList}
 		return
 	}

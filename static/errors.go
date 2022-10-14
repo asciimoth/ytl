@@ -19,10 +19,10 @@
 package static
 
 import (
+	"crypto/ed25519"
+	"encoding/hex"
 	"fmt"
 	"net/url"
-	"encoding/hex"
-	"crypto/ed25519"
 )
 
 type UnknownSchemeError struct {
@@ -49,7 +49,7 @@ func (e InvalidUriError) Timeout() bool { return false }
 
 func (e InvalidUriError) Temporary() bool { return false }
 
-type IvalidPeerPublicKey struct{
+type IvalidPeerPublicKey struct {
 	Text string
 }
 
@@ -61,7 +61,7 @@ func (e IvalidPeerPublicKey) Timeout() bool { return false }
 
 func (e IvalidPeerPublicKey) Temporary() bool { return false }
 
-type ConnTimeoutError struct {}
+type ConnTimeoutError struct{}
 
 func (e ConnTimeoutError) Error() string {
 	return fmt.Sprintf("Transport connetcion timeout")
@@ -73,7 +73,7 @@ func (e ConnTimeoutError) Temporary() bool { return true }
 
 type InapplicableProxyTypeError struct {
 	Transport string
-	Proxy url.URL
+	Proxy     url.URL
 }
 
 func (e InapplicableProxyTypeError) Error() string {
@@ -86,7 +86,7 @@ func (e InapplicableProxyTypeError) Timeout() bool { return false }
 
 func (e InapplicableProxyTypeError) Temporary() bool { return false }
 
-type UnknownProtoError struct {}
+type UnknownProtoError struct{}
 
 func (e UnknownProtoError) Error() string {
 	return fmt.Sprintf("Unknown protocol")
@@ -113,7 +113,6 @@ func (e UnknownProtoVersionError) Timeout() bool { return false }
 
 func (e UnknownProtoVersionError) Temporary() bool { return false }
 
-
 type TransportSecurityCheckError struct {
 	Expected ed25519.PublicKey
 	Received ed25519.PublicKey
@@ -131,7 +130,7 @@ func (e TransportSecurityCheckError) Timeout() bool { return false }
 
 func (e TransportSecurityCheckError) Temporary() bool { return false }
 
-type ConnClosedByDeduplicatorError struct {}
+type ConnClosedByDeduplicatorError struct{}
 
 func (e ConnClosedByDeduplicatorError) Error() string {
 	return fmt.Sprintf("Connection closed by deduplicator")
@@ -152,4 +151,3 @@ func (e UnacceptableAddressError) Error() string {
 func (e UnacceptableAddressError) Timeout() bool { return false }
 
 func (e UnacceptableAddressError) Temporary() bool { return false }
-

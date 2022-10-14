@@ -19,30 +19,30 @@
 package ytl
 
 import (
-	"net"
-	"fmt"
 	"bytes"
-	"net/url"
-	"encoding/hex"
-	"testing"
 	"context"
 	"crypto/ed25519"
-	"github.com/DomesticMoth/ytl/static"
+	"encoding/hex"
+	"fmt"
 	"github.com/DomesticMoth/ytl/debugstuff"
+	"github.com/DomesticMoth/ytl/static"
+	"net"
+	"net/url"
+	"testing"
 )
 
-func TestKeyFromOptionalKey(t *testing.T){
+func TestKeyFromOptionalKey(t *testing.T) {
 	for _, opt := range []ed25519.PrivateKey{
 		nil,
 		make(ed25519.PrivateKey, ed25519.PrivateKeySize),
-	}{
+	} {
 		if KeyFromOptionalKey(opt) == nil {
-			t.Fatalf("Key must not be nil");
+			t.Fatalf("Key must not be nil")
 		}
 	}
 }
 
-func TestConnManagerTransportSelection(t *testing.T){
+func TestConnManagerTransportSelection(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping TestConnManagerTransportSelection in short mode.")
 	}
@@ -51,15 +51,15 @@ func TestConnManagerTransportSelection(t *testing.T){
 		debugstuff.MockTransport{Scheme: "b", SecureLvl: 0},
 		debugstuff.MockTransport{Scheme: "c", SecureLvl: 0},
 	}
-	type Case struct{
+	type Case struct {
 		Scheme string
-		Exist bool
+		Exist  bool
 	}
 	cases := []Case{
-		Case{"a", true},
-		Case{"b", true},
-		Case{"c", true},
-		Case{"d", false},
+		{"a", true},
+		{"b", true},
+		{"c", true},
+		{"d", false},
 	}
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	manager := NewConnManagerWithTransports(
@@ -75,21 +75,21 @@ func TestConnManagerTransportSelection(t *testing.T){
 		res, err := manager.Connect(*uri)
 		if c.Exist {
 			if err != nil {
-				t.Errorf("Unexpected error: %s", err);
+				t.Errorf("Unexpected error: %s", err)
 				continue
 			}
 			info := debugstuff.ReadMockTransportInfoAfterHeader(res)
 			correct := debugstuff.FormatMockTransportInfo(c.Scheme, *uri, nil, false, pkey)
 			if info != correct {
-				t.Errorf("Wrong info returned from connection: %s %s", info, correct);
+				t.Errorf("Wrong info returned from connection: %s %s", info, correct)
 			}
-		}else if err == nil {
-			t.Errorf("Connecting to an unsupported transport should cause an error");
+		} else if err == nil {
+			t.Errorf("Connecting to an unsupported transport should cause an error")
 		}
 	}
 }
 
-func TestConnManagerKeyMaterialisation(t *testing.T){
+func TestConnManagerKeyMaterialisation(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping TestConnManagerKeyMaterialisation in short mode.")
 	}
@@ -98,7 +98,7 @@ func TestConnManagerKeyMaterialisation(t *testing.T){
 	}
 	uri, _ := url.Parse("a://host:123")
 	for _, key := range []ed25519.PrivateKey{
-		nil, 
+		nil,
 		make(ed25519.PrivateKey, ed25519.PrivateKeySize),
 	} {
 		manager := NewConnManagerWithTransports(
@@ -111,25 +111,25 @@ func TestConnManagerKeyMaterialisation(t *testing.T){
 		)
 		res, err := manager.Connect(*uri)
 		if err != nil {
-			t.Errorf("Unexpected error: %s", err);
+			t.Errorf("Unexpected error: %s", err)
 			continue
 		}
 		info := debugstuff.ReadMockTransportInfoAfterHeader(res)
 		incorrect := debugstuff.FormatMockTransportInfo("a", *uri, nil, false, nil)
 		if info == incorrect {
-			t.Errorf("Wrong info returned from connection: %s", info);
+			t.Errorf("Wrong info returned from connection: %s", info)
 			continue
 		}
 		if key != nil {
 			correct := debugstuff.FormatMockTransportInfo("a", *uri, nil, false, key)
 			if info != correct {
-				t.Errorf("Wrong info returned from connection: %s %s", info, correct);
+				t.Errorf("Wrong info returned from connection: %s %s", info, correct)
 			}
 		}
 	}
 }
 
-func TestConnManagerNoAllowList(t *testing.T){
+func TestConnManagerNoAllowList(t *testing.T) {
 	transports := []static.Transport{
 		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
 	}
@@ -149,7 +149,7 @@ func TestConnManagerNoAllowList(t *testing.T){
 		)
 		_, err := manager.Connect(*uri)
 		if err != nil {
-			t.Errorf("Unexpected error: %s", err);
+			t.Errorf("Unexpected error: %s", err)
 		}
 	}
 }
@@ -159,11 +159,13 @@ func publicKeyFromOptionalKey(key ed25519.PublicKey) ed25519.PublicKey {
 		return key
 	}
 	spub, _, err := ed25519.GenerateKey(nil)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	return spub
 }
 
-func TestConnManagerAllowList(t *testing.T){
+func TestConnManagerAllowList(t *testing.T) {
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	transports := []static.Transport{
 		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
@@ -173,7 +175,7 @@ func TestConnManagerAllowList(t *testing.T){
 	allow1[0] = 1
 	allow2[0] = 2
 	allowList := static.AllowList{allow1, allow2}
-	testkey := func(key ed25519.PublicKey)(net.Conn, error){
+	testkey := func(key ed25519.PublicKey) (net.Conn, error) {
 		manager := NewConnManagerWithTransports(
 			context.Background(),
 			pkey,
@@ -194,26 +196,26 @@ func TestConnManagerAllowList(t *testing.T){
 		}
 		_, err := testkey(transportKey)
 		if err == nil {
-			t.Errorf("Using a key that is not in the AllowList should result in an error");
+			t.Errorf("Using a key that is not in the AllowList should result in an error")
 		}
 	}
 	for _, transportKey := range []ed25519.PublicKey{allow1, allow2} {
 		_, err := testkey(transportKey)
 		if err != nil {
-			t.Errorf("Unexpected error: %s", err);
+			t.Errorf("Unexpected error: %s", err)
 			continue
 		}
 	}
 }
 
-func TestConnManagerIgnoreAllowList(t *testing.T){
+func TestConnManagerIgnoreAllowList(t *testing.T) {
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	transports := []static.Transport{
 		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
 	}
 	allow := make(ed25519.PublicKey, ed25519.PublicKeySize)
 	allowList := static.AllowList{allow}
-	testkey := func(key ed25519.PublicKey)(net.Conn, error){
+	testkey := func(key ed25519.PublicKey) (net.Conn, error) {
 		manager := NewConnManagerWithTransports(
 			context.Background(),
 			pkey,
@@ -238,7 +240,7 @@ func TestConnManagerIgnoreAllowList(t *testing.T){
 		}
 		_, err := testkey(transportKey)
 		if err != nil {
-			t.Errorf("Unexpected error: %s", err);
+			t.Errorf("Unexpected error: %s", err)
 		}
 	}
 }
