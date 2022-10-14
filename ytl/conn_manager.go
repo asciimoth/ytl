@@ -127,18 +127,6 @@ func (c * ConnManager) Connect(uri url.URL) (*YggConn, error) {
 	return c.ConnectCtx(c.ctx, uri)
 }
 
-func (c * ConnManager) ConnectStr(uri string) (*YggConn, error) {
-	u, err := url.Parse(uri)
-	if err != nil { return nil, err }
-	return c.ConnectCtx(c.ctx, *u)
-}
-
-func (c * ConnManager) ConnectCtxStr(ctx context.Context, uri string) (*YggConn, error) {
-	u, err := url.Parse(uri)
-	if err != nil { return nil, err }
-	return c.ConnectCtx(ctx, *u)
-}
-
 func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggConn, error) {
 	type Result struct{
 		Conn *YggConn
@@ -166,12 +154,6 @@ func (c * ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggC
     }
 }
 
-func (c * ConnManager) ConnectTimeoutStr(uri string, timeout time.Duration) (*YggConn, error) {
-	u, err := url.Parse(uri)
-	if err != nil { return nil, err }
-	return c.ConnectTimeout(*u, timeout)
-}
-
 func (c * ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
 	if transport, ok := c.transports[uri.Scheme]; ok {
 		listener, e := transport.Listen(c.ctx, uri, c.key)
@@ -182,11 +164,4 @@ func (c * ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
 	}
 	err = static.UnknownSchemeError{Scheme: uri.Scheme}
 	return
-}
-
-func (c * ConnManager) ListenStr(uri string) (ygg YggListener, err error) {
-	u, e := url.Parse(uri)
-	err = e
-	if err != nil { return }
-	return c.Listen(*u)
 }
