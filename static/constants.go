@@ -1,5 +1,4 @@
-// Ytl
-// Copyright (C) 2022 DomesticMoth <silkmoth@protonmail.com>
+// Copyright 2022 DomesticMoth
 //
 // This file is part of Ytl.
 //
