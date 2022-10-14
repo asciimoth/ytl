@@ -28,7 +28,7 @@ import (
 	"github.com/DomesticMoth/ytl/ytl/static"
 )
 
-func materialise(key ed25519.PrivateKey) ed25519.PrivateKey {
+func KeyFromOptionalKey(key ed25519.PrivateKey) ed25519.PrivateKey {
 	if key != nil {
 		return key
 	}
@@ -104,7 +104,12 @@ func (c * ConnManager) innerConnect(ctx context.Context, uri url.URL) (*YggConn,
 		allowList = &allow
 	}
 	if transport, ok := c.transports[uri.Scheme]; ok {
-		conn, err := transport.Connect(ctx, uri, c.proxyManager.Get(uri), materialise(c.key))
+		conn, err := transport.Connect(
+			ctx,
+			uri,
+			c.proxyManager.Get(uri),
+			KeyFromOptionalKey(c.key),
+		)
 		if allowList != nil {
 			if !allowList.IsAllow(conn.Pkey) || conn.Pkey == nil{
 				conn.Conn.Close()
