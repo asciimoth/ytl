@@ -30,6 +30,8 @@ import (
 	"time"
 )
 
+// Yeah. Unit tests of unit tests.
+
 func TestGetDurationFromUri(t *testing.T) {
 	textDelay := "2s"
 	key := "mock_delay_conn"

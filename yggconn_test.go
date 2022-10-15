@@ -71,7 +71,7 @@ func TestParceMetaPackage(t *testing.T) {
 		},
 	}
 	for _, cse := range cases {
-		err, version, pkey, buf := parceMetaPackage(cse.conn, time.Minute/2)
+		err, version, pkey, buf := parseMetaPackage(cse.conn, time.Minute/2)
 		if err != cse.err {
 			t.Fatalf("Wrong err %s %s", err, cse.err)
 		}

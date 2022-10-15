@@ -16,12 +16,15 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+// Package transports contatin implementations of [static.Transport] interface
 package transports
 
 import (
 	"github.com/DomesticMoth/ytl/static"
 )
 
+// Returns default slice of transports
+// (contains all builtin realisations)
 func DEFAULT_TRANSPORTS() []static.Transport {
 	return []static.Transport{
 		TcpTransport{},

@@ -24,6 +24,7 @@ import (
 	"net"
 )
 
+// Raise error if IP is in yggdrasil addreses range
 func CheckAddr(ip net.IP) error {
 	ipaddr := ip.To16()
 	if ipaddr != nil {

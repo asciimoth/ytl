@@ -23,11 +23,16 @@ import (
 	"regexp"
 )
 
+// ProxyMapping is a representation of the correspondence
+// between hosts that fall under the regular expression
+// and proxy that should be used to connect to these hosts.
 type ProxyMapping struct {
 	HostRegexp regexp.Regexp
 	Proxy      *url.URL
 }
 
+// Stores ProxyMappings and match
+// URLs to proxy 
 type ProxyManager struct {
 	defaultProxy *url.URL
 	mapping      []ProxyMapping
@@ -40,6 +45,7 @@ func NewProxyManager(defaultProxy *url.URL, mapping []ProxyMapping) ProxyManager
 	return ProxyManager{defaultProxy, mapping}
 }
 
+// Retruns proxy matched to URI by it host
 func (p *ProxyManager) Get(uri url.URL) *url.URL {
 	for _, mapping := range p.mapping {
 		if mapping.HostRegexp.MatchString(uri.Host) {

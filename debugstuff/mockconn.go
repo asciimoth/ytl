@@ -16,6 +16,8 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+// Package debugstuff implements mock structs & functions
+// using in unit tests in whole project
 package debugstuff
 
 import (
@@ -23,12 +25,14 @@ import (
 	"net"
 )
 
+// Return valid ygg pub key for debug usage
 func MockPubKey() []byte {
 	buf := MockConnContent()
 	metaPkgSize := 38
 	return buf[metaPkgSize-ed25519.PublicKeySize : metaPkgSize]
 }
 
+// Return valid handshake pkg & some pseudo payload data for debug usage
 func MockConnContent() []byte {
 	return []byte{
 		109, 101, 116, 97, // 'm' 'e' 't' 'a'
@@ -52,6 +56,8 @@ func MockConnContent() []byte {
 	}
 }
 
+// Return connection from witch valid handshake pkg 
+// & some pseudo payload data can be readed
 func MockConn() net.Conn {
 	a, b := net.Pipe()
 	go func() {
@@ -68,6 +74,8 @@ func MockConn() net.Conn {
 	return a
 }
 
+// Return valid handshake pkg & some pseudo payload data
+// but proto version is too hight
 func MockConnWrongVerContent() []byte {
 	return []byte{
 		109, 101, 116, 97, // 'm' 'e' 't' 'a'
@@ -91,6 +99,7 @@ func MockConnWrongVerContent() []byte {
 	}
 }
 
+// Guess what by name
 func MockWrongVerConn() net.Conn {
 	a, b := net.Pipe()
 	go func() {
@@ -107,6 +116,7 @@ func MockWrongVerConn() net.Conn {
 	return a
 }
 
+// Returns an incorrect cropped ygg handshake pkg
 func MockConnTooShortContent() []byte {
 	return []byte{
 		109, 101, 116, 97, // 'm' 'e' 't' 'a'
@@ -118,6 +128,7 @@ func MockConnTooShortContent() []byte {
 	}
 }
 
+// Guess what by name
 func MockTooShortConn() net.Conn {
 	a, b := net.Pipe()
 	go func() {

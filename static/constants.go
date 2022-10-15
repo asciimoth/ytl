@@ -18,6 +18,7 @@
 
 package static
 
+// Most useful seurity levels 
 const (
 	SECURE_LVL_UNSECURE               uint = 0
 	SECURE_LVL_ENCRYPTED                   = 1
@@ -25,11 +26,12 @@ const (
 	SECURE_LVL_ENCRYPTED_AND_VERIFIED      = 3
 )
 
-// Because there are no constants structures in go
+// Returns current supported version of yggdrasil protocol
 func PROTO_VERSION() ProtoVersion {
 	return ProtoVersion{0, 4}
 }
 
+// Returns static header of first pkg in yggdrasil connection
 func META_HEADER() []byte {
 	return []byte{'m', 'e', 't', 'a'}
 }

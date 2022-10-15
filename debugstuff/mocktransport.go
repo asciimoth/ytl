@@ -30,6 +30,7 @@ import (
 	"time"
 )
 
+// Returns json string with passed arguments.
 func FormatMockTransportInfo(
 	scheme string,
 	uri url.URL,
@@ -51,6 +52,7 @@ func FormatMockTransportInfo(
 	)
 }
 
+// Read all data from connetion up to EOF to string.
 func ReadMockTransportInfo(conn net.Conn) string {
 	b, err := io.ReadAll(conn)
 	if err == nil {
@@ -59,6 +61,7 @@ func ReadMockTransportInfo(conn net.Conn) string {
 	return string(b)
 }
 
+// Read ygg handshake pkg and then all data up to EOF to string.
 func ReadMockTransportInfoAfterHeader(conn net.Conn) string {
 	io.ReadFull(conn, make([]byte, 6+ed25519.PublicKeySize)) // 6 is header size
 	res := make(chan string)
@@ -71,6 +74,8 @@ func ReadMockTransportInfoAfterHeader(conn net.Conn) string {
 	return result
 }
 
+// Get the public key of the ygg node from the url key
+// or generate a new one filled with zeros if not exists.
 func getPubKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
 	if pubkeys, ok := uri.Query()[key]; ok && len(pubkeys) > 0 {
 		for _, pubkey := range pubkeys {
@@ -82,6 +87,8 @@ func getPubKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
 	return make(ed25519.PublicKey, ed25519.PublicKeySize)
 }
 
+// Get the public key of the ygg node from the url key
+// or retrun nil if not exists .
 func getTransportKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
 	if pubkeys, ok := uri.Query()[key]; ok && len(pubkeys) > 0 {
 		for _, pubkey := range pubkeys {
@@ -93,6 +100,7 @@ func getTransportKeyFromUri(uri url.URL, key string) ed25519.PublicKey {
 	return nil
 }
 
+// Get duration from the url key or return 0 if not exists.
 func getDurationFromUri(uri url.URL, key string) time.Duration {
 	if durations, ok := uri.Query()[key]; ok && len(durations) > 0 {
 		for _, duration := range durations {
@@ -105,6 +113,8 @@ func getDurationFromUri(uri url.URL, key string) time.Duration {
 	return 0
 }
 
+// Mock realistion fro TransportListener interface
+// for for debugging needs.
 type MockTransportListener struct {
 	transport static.Transport
 	uri       url.URL
@@ -128,6 +138,10 @@ func (l *MockTransportListener) Addr() net.Addr {
 	return nil
 }
 
+// Mock realistion fro Transport interface
+// for for debugging needs.
+//
+// Has mutable behavior controlled by url keys.
 type MockTransport struct {
 	Scheme    string
 	SecureLvl uint
@@ -137,6 +151,19 @@ func (t MockTransport) GetScheme() string {
 	return t.Scheme
 }
 
+// Writes result of [FormatMockTransportInfo] to returned connection
+// after handshake pkg
+//
+// Peer key returned from opened connection
+// controls by "mock_peer_key" url key.
+// Transport key returned with opened connection
+// controls by "mock_transport_key" url key.
+// Delay before returning result
+// controls by "mock_delay_conn" url key.
+// Delay before writing handshake pkg to connection
+// controls by "mock_delay_before_meta" url key.
+// Delay before writing info string to connection
+// controls by "mock_delay_after_meta" url key.
 func (t MockTransport) Connect(
 	ctx context.Context,
 	uri url.URL,

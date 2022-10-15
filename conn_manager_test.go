@@ -89,6 +89,8 @@ func TestConnManagerTransportSelection(t *testing.T) {
 	}
 }
 
+// Testing that connection manager creating random key
+// for each connection if nil key was passed to constructor.
 func TestConnManagerKeyMaterialisation(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping TestConnManagerKeyMaterialisation in short mode.")
@@ -129,6 +131,8 @@ func TestConnManagerKeyMaterialisation(t *testing.T) {
 	}
 }
 
+// Testing that all connections are acceptable
+// if there is no AllowList passed
 func TestConnManagerNoAllowList(t *testing.T) {
 	transports := []static.Transport{
 		debugstuff.MockTransport{Scheme: "a", SecureLvl: 0},
@@ -165,6 +169,8 @@ func publicKeyFromOptionalKey(key ed25519.PublicKey) ed25519.PublicKey {
 	return spub
 }
 
+// Testing that only connections with
+// nodes from AllowList are acceptable
 func TestConnManagerAllowList(t *testing.T) {
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	transports := []static.Transport{
@@ -208,6 +214,7 @@ func TestConnManagerAllowList(t *testing.T) {
 	}
 }
 
+// Testing that uri "key" key ignoring AllowList
 func TestConnManagerIgnoreAllowList(t *testing.T) {
 	pkey := make(ed25519.PrivateKey, ed25519.PrivateKeySize)
 	transports := []static.Transport{

@@ -28,17 +28,27 @@ import (
 	"time"
 )
 
+// Implemet options for connecting to tcp/ip adress
+// with some extra features
 type TcpDialer struct {
 	Timeout   time.Duration `default:"2m"`
 	KeepAlive time.Duration `default:"15s"`
 	Control   func(network, address string, c syscall.RawConn) error
 }
 
+// Dial connects to the address by url with optional using proxy (if not nil).
+// It also drops ygg over ygg connections.
 func (d *TcpDialer) Dial(uri url.URL, proxy *url.URL) (net.Conn, error) {
 	return d.DialContext(context.Background(), uri, proxy)
 }
 
+// Dial connects to the address by url with optional using proxy (if not nil).
+// It also drops ygg over ygg connections.
+// It also accepts a context that allows you to
+// cancel the process of settling ahead of time.
 func (d *TcpDialer) DialContext(ctx context.Context, uri url.URL, proxy_uri *url.URL) (net.Conn, error) {
+    // Clean code? Cyclomatic complexity?
+    // I dont know these buzzwords
 	use_proxy := false
 	if proxy_uri != nil {
 		use_proxy = proxy_uri.Scheme == "socks" || proxy_uri.Scheme == "socks5" || proxy_uri.Scheme == "socks5h"

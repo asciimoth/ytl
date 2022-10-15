@@ -24,7 +24,7 @@ import (
 	"encoding/hex"
 )
 
-func ketToStr(key ed25519.PublicKey) string {
+func keyToStr(key ed25519.PublicKey) string {
 	return hex.EncodeToString(key)
 }
 
@@ -34,6 +34,8 @@ type connInfo struct {
 	connId      uint64
 }
 
+// Stores info about all active connections
+// Call calback if one of them need to be closed.
 type DeduplicationManager struct {
 	lockChan    chan struct{}
 	connections map[string]connInfo
@@ -42,6 +44,13 @@ type DeduplicationManager struct {
 	blockKey    ed25519.PublicKey
 }
 
+// If secureMode is enabled
+// all new duplicated connections will closed immediately.
+// Otherwise from group	of duplicated connections will select one with
+// higher SecurityLvl param, and other will be closed.
+//
+// Any connection with blockKey will be closed anyway.
+// This param may be used to prevent node connect to itself.
 func NewDeduplicationManager(secureMode bool, blockKey ed25519.PublicKey) *DeduplicationManager {
 	lock := make(chan struct{}, 1)
 	lock <- struct{}{}
@@ -56,6 +65,7 @@ func (d *DeduplicationManager) unlock() {
 	d.lockChan <- struct{}{}
 }
 
+// Callback
 func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 	d.lock()
 	defer d.unlock()
@@ -70,13 +80,22 @@ func (d *DeduplicationManager) onClose(strKey string, connId uint64) {
 	}
 }
 
+// Accept public key of connected node,
+// security lvl of connection
+// and callback function that will be called when
+// DeduplicationManager decied to close current connection.
+//
+// Check if new connection is duplicate.
+// If it is not, returns callback that this
+// connection MUST call on close.
+// If it is duplicate and if it must be closed returns nill.
 func (d *DeduplicationManager) Check(key ed25519.PublicKey, isSecure uint, closeMethod func()) func() {
 	d.lock()
 	defer d.unlock()
 	if d.blockKey != nil && bytes.Compare(d.blockKey, key) == 0 {
 		return nil
 	}
-	strKey := ketToStr(key)
+	strKey := keyToStr(key)
 	if value, ok := d.connections[strKey]; ok {
 		if !d.secureMode {
 			return nil

@@ -16,6 +16,9 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+// Project desription
+// Blah blah blah
+// Add examples here
 package ytl
 
 import (
@@ -28,6 +31,8 @@ import (
 	"time"
 )
 
+// If key is not nil, retruns it as is.
+// If key is nil, generate new random key.
 func KeyFromOptionalKey(key ed25519.PrivateKey) ed25519.PrivateKey {
 	if key != nil {
 		return key
@@ -39,6 +44,8 @@ func KeyFromOptionalKey(key ed25519.PrivateKey) ed25519.PrivateKey {
 	return spriv
 }
 
+// Does exactly what the name says.
+// Use Transport.GetScheme() output as map key.
 func transportsListToMap(list []static.Transport) map[string]static.Transport {
 	transports_map := make(map[string]static.Transport)
 	for _, transport := range list {
@@ -47,6 +54,10 @@ func transportsListToMap(list []static.Transport) map[string]static.Transport {
 	return transports_map
 }
 
+// Incapsulate list of transport realisations
+// and other lower level managers
+// Manage opening & auto-closing connections,
+// keys, proxys & dedupliaction
 type ConnManager struct {
 	transports   map[string]static.Transport
 	key          ed25519.PrivateKey
@@ -56,6 +67,9 @@ type ConnManager struct {
 	dm           *DeduplicationManager
 }
 
+// Create new ConnManager with custom transports list.
+//
+// Key can be nill.
 func NewConnManagerWithTransports(
 	ctx context.Context,
 	key ed25519.PrivateKey,
@@ -72,6 +86,9 @@ func NewConnManagerWithTransports(
 	return &ConnManager{transports_map, key, *proxy, allowList, ctx, dm}
 }
 
+// Create new ConnManager with default transports list.
+//
+// Key can be nill.
 func NewConnManager(
 	ctx context.Context,
 	key ed25519.PrivateKey,
@@ -89,6 +106,21 @@ func NewConnManager(
 	)
 }
 
+// Selects the appropriate transport implementation
+// based on the uri scheme and opens the connection.
+//
+// If ConnManager was constructed with non nil ProxyManager,
+// it will be used to selection proxy based on uri host.
+//
+// If ConnManager was constructed with non nil private key,
+// it will pass to transport implementation.
+// Otherwise new random key will be used for each call.
+//
+// If ConnManager was constructed with non nil DeduplicationManager,
+// it will be used to close duplicate connections on early stage.
+//
+// It also accepts a context that allows you to
+// cancel the process ahead of time.
 func (c *ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, error) {
 	var allowList *static.AllowList = nil
 	if c.allowList != nil {
@@ -125,10 +157,37 @@ func (c *ConnManager) ConnectCtx(ctx context.Context, uri url.URL) (*YggConn, er
 	return nil, static.UnknownSchemeError{Scheme: uri.Scheme}
 }
 
+// Selects the appropriate transport implementation
+// based on the uri scheme and opens the connection.
+//
+// If ConnManager was constructed with non nil ProxyManager,
+// it will be used to selection proxy based on uri host.
+//
+// If ConnManager was constructed with non nil private key,
+// it will pass to transport implementation.
+// Otherwise new random key will be used for each call.
+//
+// If ConnManager was constructed with non nil DeduplicationManager,
+// it will be used to close duplicate connections on early stage.
 func (c *ConnManager) Connect(uri url.URL) (*YggConn, error) {
 	return c.ConnectCtx(c.ctx, uri)
 }
 
+// Selects the appropriate transport implementation
+// based on the uri scheme and opens the connection.
+//
+// If ConnManager was constructed with non nil ProxyManager,
+// it will be used to selection proxy based on uri host.
+//
+// If ConnManager was constructed with non nil private key,
+// it will pass to transport implementation.
+// Otherwise new random key will be used for each call.
+//
+// If ConnManager was constructed with non nil DeduplicationManager,
+// it will be used to close duplicate connections on early stage.
+//
+// It also accepts a timeout param
+// After timeout expires, the connection process will be canceled.
 func (c *ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggConn, error) {
 	type Result struct {
 		Conn  *YggConn
@@ -163,6 +222,9 @@ func (c *ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggCo
 	}
 }
 
+// Selects the appropriate transport implementation
+// based on the uri scheme and create listener object
+// that accpet incoming connections.
 func (c *ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
 	if transport, ok := c.transports[uri.Scheme]; ok {
 		listener, e := transport.Listen(c.ctx, uri, c.key)

@@ -28,7 +28,9 @@ import (
 	"time"
 )
 
-func internalParceMetaPackage(conn net.Conn) (
+// Parse handshake package with meta info.
+// Returns parsed data, or error.
+func internalParseMetaPackage(conn net.Conn) (
 	err error,
 	version *static.ProtoVersion,
 	pkey ed25519.PublicKey,
@@ -63,7 +65,11 @@ func internalParceMetaPackage(conn net.Conn) (
 	return
 }
 
-func parceMetaPackage(conn net.Conn, timeout time.Duration) (
+// Parse handshake package with meta info.
+// Returns parsed data, or error.
+// Close connection if handshake package
+// does not received until timeout.
+func parseMetaPackage(conn net.Conn, timeout time.Duration) (
 	err error,
 	version *static.ProtoVersion,
 	pkey ed25519.PublicKey,
@@ -77,7 +83,7 @@ func parceMetaPackage(conn net.Conn, timeout time.Duration) (
 	}
 	ret := make(chan result, 1)
 	go func() {
-		err, version, pkey, buf := internalParceMetaPackage(conn)
+		err, version, pkey, buf := internalParseMetaPackage(conn)
 		ret <- result{err, version, pkey, buf}
 	}()
 	select {
@@ -94,6 +100,11 @@ func parceMetaPackage(conn net.Conn, timeout time.Duration) (
 	}
 }
 
+// Wraper that represents connection with
+// other yggdrasil node.
+//
+// Incapsulate analysing handshake pkg
+// and communicate with DeduplicationManager.
 type YggConn struct {
 	innerConn        net.Conn
 	transport_key    ed25519.PublicKey
@@ -108,6 +119,16 @@ type YggConn struct {
 	isClosed         chan bool
 }
 
+// Wraps regular net connection to YggConn.
+//
+// Accepts optinal transport key, list of allowded nodes,
+// security lvl of connection and optional DeduplicationManager.
+//
+// If connection has key different transport key
+// or has key that does not contatain in allow list
+// or duplicates oter connection with the same node,
+// it will be closed.
+// Otherwise, it will be available as a normal connection.
 func ConnToYggConn(conn net.Conn, transport_key ed25519.PublicKey, allow *static.AllowList, secureTranport uint, dm *DeduplicationManager) *YggConn {
 	if conn == nil {
 		return nil
@@ -159,7 +180,7 @@ func (y *YggConn) middleware() {
 	if y.checkAddr() {
 		return
 	}
-	err, version, pkey, buf := parceMetaPackage(y.innerConn, time.Minute)
+	err, version, pkey, buf := parseMetaPackage(y.innerConn, time.Minute)
 	y.pVersion <- version
 	y.otherPublicKey <- pkey
 	if len(buf) == 0 {
@@ -203,6 +224,9 @@ func (y *YggConn) middleware() {
 	extraReadBuff = buf
 }
 
+// Returns version of yggdrasil protocol
+// using for this connection if handshake pkg
+// was successfully received and parsed.
 func (y *YggConn) GetVer() (*static.ProtoVersion, error) {
 	v := <-y.pVersion
 	defer func() { y.pVersion <- v }()
@@ -212,6 +236,9 @@ func (y *YggConn) GetVer() (*static.ProtoVersion, error) {
 	return v, nil
 }
 
+// Returns public key of
+// of connected node if handshake pkg
+// was successfully received and parsed.
 func (y *YggConn) GetPublicKey() (ed25519.PublicKey, error) {
 	k := <-y.otherPublicKey
 	defer func() { y.otherPublicKey <- k }()
@@ -296,6 +323,7 @@ func (y *YggConn) SetWriteDeadline(t time.Time) (err error) {
 	return
 }
 
+// Allows accepting incoming connections
 type YggListener struct {
 	inner_listener static.TransportListener
 	dm             *DeduplicationManager

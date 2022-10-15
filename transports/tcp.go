@@ -27,8 +27,11 @@ import (
 	"net/url"
 )
 
+// Exactly what the name implies
 const TcpScheme = "tcp"
 
+// Implements tcp yggdrasil transport
+// Compatible with the same named transport in yggdrasil-go
 type TcpTransport struct{}
 
 func (t TcpTransport) GetScheme() string {
