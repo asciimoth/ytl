@@ -35,7 +35,7 @@ type connInfo struct {
 }
 
 // Stores info about all active connections.
-// Call calback if one of them need to be closed.
+// Call callback if one of them need to be closed.
 type DeduplicationManager struct {
 	lockChan    chan struct{}
 	connections map[string]connInfo

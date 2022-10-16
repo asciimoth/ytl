@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-// Implemet options for connecting to tcp/ip adress
+// Implemets options for connecting to tcp/ip address
 // with some extra features
 type TcpDialer struct {
 	Timeout   time.Duration `default:"2m"`

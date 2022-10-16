@@ -27,7 +27,7 @@ import (
 // between hosts that fall under the regular expression
 // and proxy that should be used to connect to these hosts.
 type ProxyMapping struct {
-	// RegExp for host maching
+	// RegExp for host matching
 	HostRegexp regexp.Regexp
 	// Proxy (may be nil)
 	Proxy *url.URL

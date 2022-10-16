@@ -51,7 +51,7 @@ func testTcpDialerLoopRoutingProtection(
 }
 
 // Checking that ygg over ygg connections are rejected
-// while ip adress in ygg range returns by DNS request
+// while ip address in ygg range returns by DNS request
 func TestTcpDialerLoopRoutingProtectionWithDns(t *testing.T) {
 	srv, _ := mockdns.NewServer(map[string]mockdns.Zone{
 		"ygg.org.": {

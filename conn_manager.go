@@ -118,7 +118,7 @@
 //		conn, err := manager.Connect(addr)
 //		if err != nil { panic(err) }
 //
-// Returned YggConn object has interface simmilar to [net.Conn]
+// Returned YggConn object has interface similar to [net.Conn]
 // but with extra methods.
 // So it can be used wherever [net.Conn] is used.
 //
