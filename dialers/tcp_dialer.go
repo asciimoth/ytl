@@ -47,8 +47,8 @@ func (d *TcpDialer) Dial(uri url.URL, proxy *url.URL) (net.Conn, error) {
 // It also accepts a context that allows you to
 // cancel the process of settling ahead of time.
 func (d *TcpDialer) DialContext(ctx context.Context, uri url.URL, proxy_uri *url.URL) (net.Conn, error) {
-    // Clean code? Cyclomatic complexity?
-    // I dont know these buzzwords
+	// Clean code? Cyclomatic complexity?
+	// I dont know these buzzwords
 	use_proxy := false
 	if proxy_uri != nil {
 		use_proxy = proxy_uri.Scheme == "socks" || proxy_uri.Scheme == "socks5" || proxy_uri.Scheme == "socks5h"

@@ -16,7 +16,7 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-// Package static implements interfaces, types and constants 
+// Package static implements interfaces, types and constants
 // used in the rest of the project modules.
 //
 // Through this package, the others communicate with each other.
@@ -36,12 +36,12 @@ type ProtoVersion struct {
 	Major uint8 // For now, it is always 0
 	Minor uint8
 }
- 
+
 func (e ProtoVersion) String() string {
 	return fmt.Sprintf("Version{%d.%d}", e.Major, e.Minor)
 }
 
-// AllowList is a list of public keys of nodes 
+// AllowList is a list of public keys of nodes
 // that are allowed to communicate with the current.
 //
 // AllowList can be equal to nil.
@@ -70,9 +70,9 @@ func (a *AllowList) IsAllow(key ed25519.PublicKey) bool {
 // when establishing a transport connection with another node
 type ConnResult struct {
 	// The connection itself
-	Conn          net.Conn
+	Conn net.Conn
 	// Optional transport lvl public key (may be nil)
-	Pkey          ed25519.PublicKey
+	Pkey ed25519.PublicKey
 	// Lvl of connection security
 	// Here is most used values:
 	// - ytl.static.SECURE_LVL_UNSECURE
@@ -135,7 +135,7 @@ type Transport interface {
 	GetScheme() string
 	// Establishes and returns a transport connection or returns an error.
 	Connect(
-		ctx context.Context, uri url.URL, 
+		ctx context.Context, uri url.URL,
 		proxy *url.URL, key ed25519.PrivateKey,
 	) (ConnResult, error)
 	// Returns listener object for accepting incoming transport connections.

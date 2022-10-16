@@ -18,7 +18,7 @@
 
 package static
 
-// Most useful seurity levels 
+// Most useful seurity levels
 const (
 	SECURE_LVL_UNSECURE               uint = 0
 	SECURE_LVL_ENCRYPTED                   = 1

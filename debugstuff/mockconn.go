@@ -56,7 +56,7 @@ func MockConnContent() []byte {
 	}
 }
 
-// Return connection from witch valid handshake pkg 
+// Return connection from witch valid handshake pkg
 // & some pseudo payload data can be readed
 func MockConn() net.Conn {
 	a, b := net.Pipe()

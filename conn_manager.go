@@ -16,9 +16,125 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-// Project desription
-// Blah blah blah
-// Add examples here
+// Package ytl provides top-level logic for working with
+// Yggdrasil network transport connections.
+//
+// Although the package provides access to low-level primitives,
+// but most clients will need only the basic interface provided by the
+// ConnManager, ProxyManager, DeduplicationManager, YggConn and YggListener types.
+//
+// In the basic case, to get started, you need to create a ConnManager object.
+//
+//		manager := ytl.NewConnManager(
+//			context.Background(), // Or your context here
+//			nil,
+//			nil,
+//			nil,
+//			nil,
+//		)
+//
+// If you want to use a specific private and public key pair,
+// you need to pass your private key to the ConnManager constructor.
+// If key is not passed,
+// a new random key will be generated for each connection.
+//
+//		_, priv, _ := ed25519.GenerateKey(nil)
+//		manager := ytl.NewConnManager(
+//			context.Background(),
+//			priv, // Pass your ygg private key here
+//			nil,
+//			nil,
+//			nil,
+//		)
+//
+// If you want to enable connetions deduplication
+// ( aka restriction for more than one connection to each node),
+// you need to pass DeduplicationManager object with those params
+// to ConnManager constructor.
+//
+// ( See more info in DeduplicationManager type documentation. )
+//
+//		manager := ytl.NewConnManager(
+//			context.Background(),
+//			nil,
+//			nil,
+//			ytl.NewDeduplicationManager(true, nil),
+//			nil,
+//		)
+//
+// If you want to allow only subset of nodes to strait connections,
+// you need to pass slice of there public keys to ConnManager constructor.
+//
+//		pub1, _, _ := ed25519.GenerateKey(nil)
+//		pub2, _, _ := ed25519.GenerateKey(nil)
+//		pub3, _, _ := ed25519.GenerateKey(nil)
+//		manager := ytl.NewConnManager(
+//			context.Background(),
+//			nil,
+//			nil,
+//			nil,
+//			ytl.static.AllowList[]{
+//				pub1,
+//				pub2,
+//				pub3,
+//			},
+//		)
+//
+// If you want to proxify connections to certain hosts via socks proxy,
+// you need to pass the ProxyManager object with the appropriate rules
+// to the ConnManager constructor.
+//
+// ( See more info in ProxyManager type documentation. )
+//
+//		torProxy, _ := url.Parse("socks://localhost:9050")
+//		i2pProxy, _ := url.Parse("socks://localhost:9060")
+//		manager := ytl.NewConnManager(
+//			context.Background(),
+//			nil,
+//			ytl.NewProxyManager(
+//				nil, // Default proxy here or nil
+//				[]ytl.ProxyMapping{
+//					{
+//						// Proxify rule for tor nodes
+//						HostRegexp: *regexp.MustCompile(`\.onion$`),
+//						Proxy:      torProxy,
+//					},
+//					{
+//						// Proxify rule for i2p nodes
+//						HostRegexp: *regexp.MustCompile(`\.i2p$`),
+//						Proxy:      i2pProxy,
+//					},
+//				},
+//			),
+//			nil,
+//			nil,
+//		)
+//
+// After you have created the ConnManager object,
+// you can use it to open outgoing connections with the Connect method
+// ( ConnectCtx and ConnectTimeout methods are also available ).
+//
+//		addr, _ := url.Parse("tcp://0.0.0.0:1337")
+//		conn, err := manager.Connect(addr)
+//		if err != nil { panic(err) }
+//
+// Returned YggConn object has interface simmilar to [net.Conn]
+// but with extra methods.
+// So it can be used wherever [net.Conn] is used.
+//
+// If you want to listen incoming connections
+// you need to use ConnManager.Listen method
+//
+//		addr, _ := url.Parse("tcp://127.0.0.1:1337")
+//		listener, err := manager.Listen(addr)
+//		if err != nil { panic(err) }
+//		for {
+//			conn, err := listener.Accept()
+//			if err != nil {
+//				// Handle error
+//			}
+//		}
+//
 package ytl
 
 import (
@@ -55,9 +171,9 @@ func transportsListToMap(list []static.Transport) map[string]static.Transport {
 }
 
 // Incapsulate list of transport realisations
-// and other lower level managers
+// and other lower level managers.
 // Manage opening & auto-closing connections,
-// keys, proxys & dedupliaction
+// keys, proxys & dedupliaction.
 type ConnManager struct {
 	transports   map[string]static.Transport
 	key          ed25519.PrivateKey
@@ -186,7 +302,7 @@ func (c *ConnManager) Connect(uri url.URL) (*YggConn, error) {
 // If ConnManager was constructed with non nil DeduplicationManager,
 // it will be used to close duplicate connections on early stage.
 //
-// It also accepts a timeout param
+// It also accepts a timeout param.
 // After timeout expires, the connection process will be canceled.
 func (c *ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggConn, error) {
 	type Result struct {
@@ -227,7 +343,7 @@ func (c *ConnManager) ConnectTimeout(uri url.URL, timeout time.Duration) (*YggCo
 // that accpet incoming connections.
 func (c *ConnManager) Listen(uri url.URL) (ygg YggListener, err error) {
 	if transport, ok := c.transports[uri.Scheme]; ok {
-		listener, e := transport.Listen(c.ctx, uri, c.key)
+		listener, e := transport.Listen(c.ctx, uri, KeyFromOptionalKey(c.key))
 		err = e
 		if err != nil {
 			return

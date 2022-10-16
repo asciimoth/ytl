@@ -34,7 +34,7 @@ type connInfo struct {
 	connId      uint64
 }
 
-// Stores info about all active connections
+// Stores info about all active connections.
 // Call calback if one of them need to be closed.
 type DeduplicationManager struct {
 	lockChan    chan struct{}
@@ -44,7 +44,7 @@ type DeduplicationManager struct {
 	blockKey    ed25519.PublicKey
 }
 
-// If secureMode is enabled
+// If secureMode is disabled
 // all new duplicated connections will closed immediately.
 // Otherwise from group	of duplicated connections will select one with
 // higher SecurityLvl param, and other will be closed.
