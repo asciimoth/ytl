@@ -1,4 +1,4 @@
-<div style="width: 100%">
+<div style="width: 100%; text-align: center;">
 Moved to <a href="https://github.com/Yggdrasil-Unofficial/ytl">Yggdrasil-Unofficial/ytl</a>
 </div>
   
