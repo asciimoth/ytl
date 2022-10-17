@@ -1,4 +1,4 @@
-<span width=100%>
+<span style="width: 100%">
 Moved to <a href="https://github.com/Yggdrasil-Unofficial/ytl">Yggdrasil-Unofficial/ytl</a>
 </span>
   
