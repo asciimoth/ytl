@@ -1,6 +1,6 @@
-<span style="width: 100%">
+<div style="width: 100%">
 Moved to <a href="https://github.com/Yggdrasil-Unofficial/ytl">Yggdrasil-Unofficial/ytl</a>
-</span>
+</div>
   
 # Ytl
 [![Go Reference](https://pkg.go.dev/badge/github.com/DomesticMoth/ytl.svg)](https://pkg.go.dev/github.com/DomesticMoth/ytl)
